@@ -1,364 +1,145 @@
-# Phil-CLI: AI Agent Bảo Mật và Tiện Dụng cho Terminal
+# 🤖 Phil AI Agent (phil-cli)
 
-## Giới thiệu
+**Phil Agentic AI System** - Hệ thống AI Tự chủ Đa phương thức (Multimodal), có khả năng Nghe, Nói, Nhìn, Lập trình và Tự học.
 
-**Phil-CLI** là một AI Agentic được thiết kế để chạy trên Terminal (macOS, Linux, Windows), tập trung vào **bảo mật** và **khả năng agentic** vượt trội so với các công cụ hiện có như Clawdbot hay Claude Code.
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![GPU](https://img.shields.io/badge/GPU-NVIDIA_A100-green)
 
-Phil-CLI sử dụng mô hình ngôn ngữ lớn mạnh mẽ (mặc định là Claude 3.5 Sonnet) và tích hợp cơ chế **Sandbox** (thông qua Docker hoặc thực thi cục bộ an toàn) để đảm bảo mọi lệnh shell đều được thực thi trong môi trường cô lập, giảm thiểu rủi ro cho hệ thống chính của bạn.
+## 📖 Giới thiệu
 
-## Tính năng nổi bật
+**Phil AI Agent** là một tác nhân AI toàn năng được thiết kế để chạy **Self-hosted** (tự lưu trữ), đảm bảo quyền riêng tư tuyệt đối và khả năng mở rộng không giới hạn thông qua giao thức MCP (Model Context Protocol).
 
-| Tính năng | Mô tả | Lợi ích so với đối thủ |
-| :--- | :--- | :--- |
-| **Sandbox Execution** | Mọi lệnh shell được chạy trong môi trường Docker cô lập. | **Bảo mật tối đa**, tránh rủi ro từ các lệnh nguy hiểm. |
-| **Agentic Core** | Sử dụng Claude 3.5 Sonnet với khả năng lập luận và sử dụng công cụ (Tool Use) vượt trội. | **Hiệu suất cao** trong các tác vụ lập trình và quản lý hệ thống phức tạp. |
-| **Bảo mật tương tác** | Yêu cầu xác nhận của người dùng trước khi thực thi các lệnh shell nguy hiểm (`rm -rf`, `sudo`, v.v.). | **Ngăn chặn lỗi vô ý** và các hành vi độc hại. |
-| **Tích hợp MCP** | Sẵn sàng tích hợp với các MCP Server (Model Context Protocol) để mở rộng khả năng. | **Khả năng mở rộng** vô hạn với các công cụ bên ngoài (Search, GitHub, v.v.). |
-| **Giao diện Terminal** | Sử dụng thư viện `rich` để cung cấp giao diện đẹp, dễ đọc, hỗ trợ Markdown. | **Trải nghiệm người dùng** tiện lợi và chuyên nghiệp. |
+Hệ thống hoạt động dựa trên kiến trúc **Dual-Brain**:
+1.  **🛡️ Security Layer (The Gatekeeper):**
+    * **Nginx Gateway:** Quản lý lưu lượng, Rate Limiting (chống DDoS), Routing và SSL Termination.
+    * **Isolation:** Mỗi người dùng có không gian Workspace riêng biệt, đảm bảo dữ liệu không bị lộ.
+
+2.  **🧠 The Dual-Brain Core:**
+    * **Logic Engine:** `Llama-3-70B-Instruct` (AWQ) - Xử lý tư duy phức tạp, MPC Planning.
+    * **Language Soul:** `PhoGPT-4B` - Chuyên trách văn hóa và ngôn ngữ Tiếng Việt.
+
+3.  **👁️👂🗣️ Sensory Modules:**
+    * **Vision:** `Qwen2-VL` (OCR & Image Understanding).
+    * **Hearing:** `Faster-Whisper Large-v3` (High-fidelity STT).
+    * **Speech:** `XTTS-v2` (Multilingual TTS with Voice Cloning).
+
+4.  **🔌 Expansion & Action:**
+    * **MCP Protocol:** Kết nối Telegram, Discord, Zalo (Puppeteer), Git, Database.
+    * **Docker Sandbox:** Môi trường thực thi code an toàn.
+
+---
+
+## 📂 Cấu trúc dự án
+
+```text
+phil-cli/
+├── nginx/                   # API Gateway & Security
+│   ├── nginx.conf           # Cấu hình chặn cửa, SSL, Rate limit
+│   └── .htpasswd            # (Tùy chọn) Danh sách user hợp lệ
+├── docker-compose.yml       # Hạ tầng 5 Model AI (Brain, Eyes, Ears, Mouth)
+├── mcp_servers_config.json  # Cấu hình kết nối công cụ mở rộng
+├── src/                     # Mã nguồn Core Logic
+│   ├── agent_graph.py       # Bộ não trung tâm (LangGraph)
+│   ├── mpc_planner.py       # Thuật toán lập kế hoạch
+│   └── tools_*.py           # Các module chức năng
+├── skills/                  # Kho kỹ năng Agent tự học
+├── sandbox/                 # Môi trường thực thi code
+├── ui/                      # Giao diện Web (Streamlit)
+├── cli.py                   # Giao diện dòng lệnh (Terminal)
+└── training/                # Module tự học (Fine-tuning)
+```
+
+## 🚀 Tính Năng Nổi Bật
+
+| Tính năng | Mô tả |
+| :--- | :--- |
+| **Global Scalability** | Hỗ trợ phục vụ đồng thời nhiều user nhờ Nginx Load Balancing và Async Queue. |
+| **Model Predictive Control** | Sử dụng thuật toán MPC để lập kế hoạch nhiều bước (Thinking -> Planning -> Coding -> Review). |
+| **Coding Master** | Tự động viết, chạy, debug code Python/Bash trong Sandbox bị cô lập. |
+| **Full Multimodal** | Nghe giọng nói, nhìn hình ảnh/tài liệu và phản hồi bằng giọng nói tự nhiên. |
+| **Self-Evolution** | Tự động fine-tune model (Unsloth) sau mỗi chu kỳ hoạt động để thông minh hơn. |
+
+---
 
 ## Cài đặt
 
-### 1. Yêu cầu
+### 1. Yêu cầu phần cứng
 
-*   Python 3.10+
-*   `pip`
-*   (Tùy chọn) Docker (để có sandbox bảo mật nhất)
-*   API Key của Anthropic (hoặc OpenAI)
+* **Server:** GPU Cluster (Runpod/AWS/GCP) với tối thiểu 1x A100 (80GB VRAM) hoặc 2x A6000.
+* **Storage:** 200GB SSD.
+* **Docker & Docker Compose.**
 
-### 2. Cài đặt
-
-1.  **Tải mã nguồn:**
-    \`\`\`bash
-    git clone <repository_url> # Giả định có repository
-    cd phil-cli
-    \`\`\`
-    *Lưu ý: Trong bản demo này, các file đã được tạo sẵn trong thư mục \`phil_cli\`.*
-
-2.  **Chạy script cài đặt:**
-    \`\`\`bash
-    chmod +x setup_phil.sh
-    ./setup_phil.sh
-    \`\`\`
-
-3.  **Cấu hình API Key:**
-    Mở file `.env` vừa được tạo và điền API Key của bạn:
-    \`\`\`
-    ANTHROPIC_API_KEY="<YOUR_ANTHROPIC_API_KEY>"
-    # Hoặc
-    # OPENAI_API_KEY="<YOUR_OPENAI_API_KEY>"
-    SENTINEL_MODEL="claude-3-5-sonnet-20240620"
-    \`\`\`
-
-### 3. Khởi chạy
-
-1.  **Kích hoạt môi trường ảo:**
-    \`\`\`bash
-    source venv/bin/activate
-    \`\`\`
-
-2.  **Chạy Agent:**
-    \`\`\`bash
-    python3 -m phil_cli.phil
-    \`\`\`
-
-## Sử dụng
-
-Sau khi khởi chạy, bạn có thể bắt đầu tương tác với Phil-CLI:
-
-\`\`\`
-Phil Agent
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── with a simple text editor.\`\`\`
-
-## 1. Project Setup
-
-First, let's create the project directory and the necessary files.
-
+### Bước 1: Thiết lập Môi trường
 ```bash
-mkdir -p phil-cli
+# Clone repository
+git clone [https://github.com/your-repo/phil-cli.git](https://github.com/your-repo/phil-cli.git)
 cd phil-cli
-touch phil.py config.py sandbox.py memory.py setup.sh README.md
+
+# Cấu hình biến môi trường (Bảo mật)
+cp .env.example .env
+# Chỉnh sửa .env: Thêm API Keys, Tokens cho Telegram/Discord
 ```
 
-## 2. Code Implementation
-
-We will use Python for the agent logic, `rich` for the terminal UI, and `docker` for sandboxing.
-
-### 2.1. `config.py`
-
-This file handles configuration and API key validation.
-
-```python
-# /home/ubuntu/phil-cli/config.py
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-class Config:
-    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    # Using Claude 3.5 Sonnet as the default powerful model
-    DEFAULT_MODEL = os.getenv("SENTINEL_MODEL", "claude-3-5-sonnet-20240620")
-    WORKSPACE_DIR = os.getenv("SENTINEL_WORKSPACE", os.getcwd())
-    
-    @staticmethod
-    def validate():
-        if not Config.ANTHROPIC_API_KEY and not Config.OPENAI_API_KEY:
-            return False, "Vui lòng cấu hình ANTHROPIC_API_KEY hoặc OPENAI_API_KEY trong file .env"
-        return True, ""
-```
-
-### 2.2. `sandbox.py`
-
-This file manages the secure execution environment, prioritizing Docker for maximum security, with a fallback to local execution if Docker is unavailable.
-
-```python
-# /home/ubuntu/phil-cli/sandbox.py
-import docker
-import os
-import subprocess
-
-class Sandbox:
-    def __init__(self, image="python:3.11-slim"):
-        self.container = None
-        self.image = image
-        self.use_docker = False
-        try:
-            # Check if Docker is running and accessible
-            self.client = docker.from_env()
-            self.client.ping()
-            self.use_docker = True
-        except Exception:
-            print("Docker not available. Falling back to local execution (less secure).")
-
-    def start(self):
-        if self.use_docker and not self.container:
-            try:
-                # Mount the current working directory into the container
-                self.container = self.client.containers.run(
-                    self.image,
-                    command="tail -f /dev/null", # Keep the container running
-                    detach=True,
-                    tty=True,
-                    working_dir="/workspace",
-                    volumes={os.getcwd(): {"bind": "/workspace", "mode": "rw"}}
-                )
-                print(f"Started Docker container: {self.container.id[:12]}")
-            except Exception as e:
-                print(f"Error starting Docker: {e}. Falling back to local execution.")
-                self.use_docker = False
-        return self.container
-
-    def execute(self, command):
-        if self.use_docker:
-            if not self.container:
-                self.start()
-            if self.container:
-                try:
-                    # Execute command inside the running container
-                    exec_result = self.container.exec_run(command)
-                    return exec_result.output.decode('utf-8'), exec_result.exit_code
-                except Exception as e:
-                    print(f"Docker execution failed: {e}. Falling back to local execution.")
-                    self.use_docker = False
-        
-        # Fallback to local execution
-        try:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            return result.stdout + result.stderr, result.returncode
-        except Exception as e:
-            return str(e), 1
-
-    def stop(self):
-        if self.container:
-            try:
-                self.container.stop()
-                self.container.remove()
-            except Exception:
-                pass
-            self.container = None
-```
-
-### 2.3. `phil.py` (Core Agent Loop)
-
-This is the main file containing the agent logic, tool definition (`run_shell`), and the chat loop. It also includes the security check for dangerous commands.
-
-```python
-# /home/ubuntu/phil-cli/sentinel.py
-import os
-import sys
-import json
-from anthropic import Anthropic
-from rich.console import Console
-from rich.panel import Panel
-from rich.markdown import Markdown
-from .config import Config
-from .sandbox import Sandbox
-
-console = Console()
-
-class SentinelAgent:
-    def __init__(self):
-        # Initialize Anthropic client
-        self.client = Anthropic(api_key=Config.ANTHROPIC_API_KEY)
-        self.sandbox = Sandbox()
-        self.history = []
-        self.system_prompt = """Bạn là Sentinel, một AI Agent mạnh mẽ và bảo mật chạy trên Terminal.
-Nhiệm vụ của bạn là giúp người dùng thực hiện các tác vụ từ lập trình đến quản lý hệ thống.
-Bạn có quyền truy cập vào một sandbox an toàn để thực thi lệnh shell.
-
-QUY TẮC BẢO MẬT:
-1. Luôn thực thi code trong sandbox.
-2. Nếu người dùng yêu cầu lệnh nguy hiểm (xóa file hệ thống, v.v.), hãy cảnh báo và yêu cầu xác nhận.
-3. Giữ cho phản hồi ngắn gọn và tập trung vào kết quả.
-"""
-
-    def is_dangerous(self, command):
-        # Simple check for dangerous commands
-        dangerous_patterns = ["rm -rf", "sudo", "> /dev/sda", "mkfs", "dd if="]
-        return any(pattern in command for pattern in dangerous_patterns)
-
-    def run_shell(self, command):
-        if self.is_dangerous(command):
-            console.print(f"[bold yellow]CẢNH BÁO:[/bold yellow] Lệnh này có thể gây nguy hiểm: [bold red]{command}[/bold red]")
-            confirm = console.input("Bạn có chắc chắn muốn chạy không? (y/n): ")
-            if confirm.lower() != 'y':
-                return "Lệnh đã bị hủy bởi người dùng."
-
-        console.print(f"[bold blue]Executing:[/bold blue] {command}")
-        output, exit_code = self.sandbox.execute(command)
-        return f"Exit Code: {exit_code}\nOutput:\n{output}"
-
-    def chat(self, user_input):
-        # Append user message to history
-        self.history.append({"role": "user", "content": user_input})
-        
-        # Define the shell tool for the LLM
-        tools = [
-            {
-                "name": "run_shell",
-                "description": "Thực thi lệnh shell trong môi trường sandbox an toàn.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "command": {"type": "string", "description": "Lệnh shell cần chạy"}
-                    },
-                    "required": ["command"]
-                }
-            }
-        ]
-
-        while True:
-            # Call the Anthropic API
-            response = self.client.messages.create(
-                model=Config.DEFAULT_MODEL,
-                max_tokens=4096,
-                system=self.system_prompt,
-                messages=self.history,
-                tools=tools
-            )
-
-            has_tool_use = False
-            for content in response.content:
-                if content.type == "text":
-                    # Display and save AI's text response
-                    console.print(Markdown(content.text))
-                    self.history.append({"role": "assistant", "content": content.text})
-                
-                if content.type == "tool_use":
-                    has_tool_use = True
-                    tool_name = content.name
-                    tool_input = content.input
-                    tool_use_id = content.id
-                    
-                    if tool_name == "run_shell":
-                        # Execute the shell command
-                        result = self.run_shell(tool_input["command"])
-                    else:
-                        result = "Unknown tool"
-                        
-                    # Append tool call and result to history for the next turn
-                    self.history.append({
-                        "role": "assistant",
-                        "content": [content]
-                    })
-                    self.history.append({
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "tool_result",
-                                "tool_use_id": tool_use_id,
-                                "content": result
-                            }
-                        ]
-                    })
-            
-            # If no tool was used, the conversation turn is complete
-            if not has_tool_use:
-                break
-
-def main():
-    valid, msg = Config.validate()
-    if not valid:
-        console.print(f"[bold red]Error:[/bold red] {msg}")
-        return
-
-    agent = SentinelAgent()
-    console.print(Panel("[bold green]Sentinel-CLI is ready.[/bold green]\nType 'exit' to quit.", title="Sentinel Agent"))
-    
-    while True:
-        try:
-            user_input = console.input("[bold cyan]>>> [/bold cyan]")
-            if not user_input:
-                continue
-            if user_input.lower() in ["exit", "quit"]:
-                # Clean up the sandbox container on exit
-                agent.sandbox.stop()
-                break
-            agent.chat(user_input)
-        except KeyboardInterrupt:
-            agent.sandbox.stop()
-            break
-        except Exception as e:
-            console.print(f"[bold red]Error:[/bold red] {str(e)}")
-
-if __name__ == "__main__":
-    main()
-```
-
-### 2.4. `setup.sh`
-
-The setup script to automate installation.
+### Bước 2: Khởi động Hệ thống (Backend)
 
 ```bash
-# /home/ubuntu/setup_phil.sh
-#!/bin/bash
+# Chạy hạ tầng AI & Gateway bảo mật
+docker-compose up -d
 
-echo "Installing Phil-CLI..."
-
-# Check for Python
-if ! command -v python3 &> /dev/null
-then
-    echo "Python3 could not be found. Please install it first."
-    exit
-fi
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install anthropic openai python-dotenv docker rich
-
-# Create .env file if it doesn't exist
-if [ ! -f .env ]; then
-    echo "Creating .env file. Please add your API keys."
-    echo "ANTHROPIC_API_KEY=" > .env
-    echo "OPENAI_API_KEY=" >> .env
-    echo "SENTINEL_MODEL=claude-3-5-sonnet-20240620" >> .env
-fi
-
-echo "Setup complete. To run Sentinel-CLI:"
-echo "source venv/bin/activate"
-echo "python3 -m phil_cli.phil"
+# Kiểm tra trạng thái
+docker-compose ps
 ```
+Lúc này, hệ thống sẽ ẩn toàn bộ port 8000-8004 và chỉ mở port **80 (HTTP)** hoặc **443 (HTTPS).**
+
+### Bước 3: Client Connection
+Bạn có thể kết nối với Phil thông qua 3 giao diện:
+1. **CLI (Terminal):** Dành cho Developer.
+```bash
+python cli.py --user="admin"
+```
+2. **Web UI (Streamlit):** Dành cho End-user.
+```bash
+streamlit run ui/app.py
+```
+3. **API Integration:** Tích hợp vào Mobile App hoặc Website khác.
+Endpoint: `http://your-server-ip/api/coder/v1/chat/completions`
+
+---
+
+### 🔌 Mở rộng (MCP)
+Để kết nối thêm công cụ (ví dụ: Google Drive, Slack), hãy chỉnh sửa file `mcp_servers_config.json`:
+
+```bash
+"gdrive": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-gdrive"]
+}
+```
+
+### 🔒 Bảo Mật & Multi-tenancy
+Để phục vụ toàn cầu, hệ thống áp dụng các quy chuẩn:
+* **API Key Authentication:** Mọi request phải có Header Authorization.
+
+* **Rate Limiting**: Giới hạn 60 requests/phút mỗi user để bảo vệ GPU.
+
+* **Sandboxing:** Code của user A chạy trong container tách biệt với user B (Cần cấu hình Kubernetes cho Production).
+
+
+### 🤝 Đóng Góp (Contributing)
+Dự án Phil AI Agent là mã nguồn mở. Chúng tôi chào đón mọi đóng góp về:
+
+* Tối ưu hóa MPC Planner.
+
+* Thêm MCP Server mới (Notion, Slack...).
+
+* Cải thiện bộ dataset Tiếng Việt cho PhoGPT.
+
+### 📜 License
+MIT License. Created by PHGroup.
+```bash
+### Tóm tắt thay đổi
+1.  **Thêm Nginx Gateway:** Bảo vệ các model AI, không cho truy cập trực tiếp.
+2.  **Cập nhật Docker Compose:** Ẩn port nội bộ, chỉ expose port Gateway.
+3.  **README:** Viết lại theo hướng Enterprise/SaaS, nhấn mạnh bảo mật và khả năng mở rộng.
+---

@@ -1,0 +1,155 @@
+version: '3.9'
+
+services:
+  # --- 1. SECURITY GATEWAY (CỔNG BẢO MẬT) ---
+  # Đứng chắn trước tất cả AI Model, xử lý Rate Limit & Routing
+  gateway:
+    image: nginx:latest
+    container_name: phil_gateway
+    restart: always
+    ports:
+      - "80:80" # Chỉ mở cổng HTTP (hoặc 443 nếu bạn có chứng chỉ SSL)
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - llm-coder
+      - llm-vietnamese
+    networks:
+      - phil_network
+
+  # --- 2. BRAIN: LOGIC & CODING (Llama-3-70B) ---
+  # Port nội bộ: 8000 (Không public)
+  llm-coder:
+    image: vllm/vllm-openai:latest
+    container_name: ai_brain_coder
+    runtime: nvidia
+    restart: always
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    command: >
+      --model casperhansen/llama-3-70b-instruct-awq
+      --quantization awq
+      --dtype half
+      --max-model-len 8192
+      --gpu-memory-utilization 0.50
+      --port 8000
+      --host 0.0.0.0
+    volumes:
+      - ./models:/root/.cache/huggingface
+    networks:
+      - phil_network
+
+  # --- 3. SOUL: VIETNAMESE LANGUAGE (PhoGPT-4B) ---
+  # Port nội bộ: 8001 (Không public)
+  llm-vietnamese:
+    image: vllm/vllm-openai:latest
+    container_name: ai_brain_vietnamese
+    runtime: nvidia
+    restart: always
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    command: >
+      --model vinai/PhoGPT-4B-Chat
+      --trust-remote-code
+      --dtype half
+      --gpu-memory-utilization 0.10
+      --port 8001
+      --host 0.0.0.0
+    volumes:
+      - ./models:/root/.cache/huggingface
+    networks:
+      - phil_network
+
+  # --- 4. EYES: VISION (Qwen2-VL-7B) ---
+  # Port nội bộ: 8002 (Không public)
+  llm-vision:
+    image: vllm/vllm-openai:latest
+    container_name: ai_brain_eyes
+    runtime: nvidia
+    restart: always
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    command: >
+      --model Qwen/Qwen2-VL-7B-Instruct-AWQ
+      --quantization awq
+      --dtype half
+      --gpu-memory-utilization 0.10
+      --max-model-len 4096
+      --limit-mm-per-prompt image=1
+      --port 8002
+      --host 0.0.0.0
+    volumes:
+      - ./models:/root/.cache/huggingface
+    networks:
+      - phil_network
+
+  # --- 5. EARS: SPEECH-TO-TEXT (Faster-Whisper) ---
+  # Port nội bộ: 8003 (Không public)
+  stt-engine:
+    image: fedirz/faster-whisper-server:latest-cuda
+    container_name: ai_brain_ears
+    runtime: nvidia
+    restart: always
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - WHISPER_MODEL=large-v3
+    volumes:
+      - ./models:/root/.cache/huggingface
+    networks:
+      - phil_network
+
+  # --- 6. MOUTH: TEXT-TO-SPEECH (XTTS-v2) ---
+  # Port nội bộ: 8004 (Không public)
+  tts-engine:
+    image: ghcr.io/coqui-ai/tts:latest
+    container_name: ai_brain_mouth
+    runtime: nvidia
+    restart: always
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    command: "python3 -m TTS.server.server --model_name tts_models/multilingual/multi-dataset/xtts_v2 --port 8004 --use_cuda true"
+    volumes:
+      - ./models:/root/.local/share/tts
+    networks:
+      - phil_network
+
+  # --- 7. HANDS: CODING SANDBOX (Môi trường thực thi) ---
+  # Nơi Agent chạy code Python, kết nối MCP
+  code-sandbox:
+    build: ./sandbox
+    container_name: ai_sandbox
+    command: tail -f /dev/null # Giữ container chạy để chờ lệnh
+    volumes:
+      - ./workspace:/workspace                 # Shared volume để lưu file code
+      - ./skills:/workspace/skills             # Mount thư mục kỹ năng
+      - ./mcp_servers_config.json:/workspace/mcp_servers_config.json # Config MCP
+    working_dir: /workspace
+    networks:
+      - phil_network
+
+  # --- 8. CONTROLLER & UI (Streamlit / CLI) ---
+  # Giao diện người dùng
+  agent-app:
+    build: 
+      context: .
+      dockerfile: sandbox/Dockerfile # Tận dụng môi trường python đã cài thư viện
+    container_name: ai_controller
+    command: streamlit run ui/app.py --server.port 8501 --server.address 0.0.0.0
+    volumes:
+      - .:/app
+      - ./workspace:/workspace
+      - ./skills:/app/skills
+      - /var/run/docker.sock:/var/run/docker.sock # Cho phép App điều khiển Docker Sandbox
+    ports:
+      - "8501:8501" # Mở port UI để truy cập web
+    env_file:
+      - .env
+    depends_on:
+      - gateway
+    networks:
+      - phil_network
+
+# Định nghĩa mạng riêng để tăng bảo mật
+  networks:
+    phil_network:
+      driver: bridge
