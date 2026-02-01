@@ -33,3 +33,6 @@ datasets
 peft
 accelerate
 bitsandbytes
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart

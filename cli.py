@@ -1,75 +1,44 @@
-import os
 import sys
-import asyncio
-from dotenv import load_dotenv
+import requests
+import json
 from rich.console import Console
-from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.prompt import Prompt
-from rich.live import Live
-from rich.spinner import Spinner
 
-# Load environment & config
-load_dotenv()
-sys.path.append(os.getcwd())
-
-from src.agent_graph import app_graph
-from src.tools_audio import speak_text
+# Cấu hình Client (Người dùng sẽ trỏ về Server của bạn)
+# Nếu bạn deploy server lên IP 1.2.3.4, thì thay localhost bằng IP đó
+SERVER_URL = "http://localhost:8080/v1/chat" 
+API_KEY = "phil_secret_key_123"
 
 console = Console()
 
-def print_banner():
-    console.print(Panel.fit(
-        "[bold cyan]PHIL AI AGENT 1 (CLI EDITION)[/bold cyan]\n"
-        "[dim]Sovereign Multimodal Intelligence System[/dim]",
-        border_style="blue"
-    ))
-
-def process_input(user_input, iterations=0):
-    inputs = {
-        "user_input_vn": user_input,
-        "image_url": None, # CLI cơ bản chưa hỗ trợ upload ảnh trực tiếp
-        "iterations": iterations,
-        "technical_plan": "", "code": "", "exec_result": ""
-    }
-    
-    # Chạy Graph
-    try:
-        final_state = app_graph.invoke(inputs)
-        return final_state['final_response_vn']
-    except Exception as e:
-        return f"System Error: {str(e)}"
-
 def main():
-    print_banner()
-    console.print("[green]System initialized. Ready to serve.[/green]\n")
+    console.print("[bold cyan]PHIL AI - REMOTE CLI[/bold cyan]")
+    user_id = Prompt.ask("Enter your User ID", default="guest")
 
     while True:
+        user_input = Prompt.ask(f"[green]{user_id}[/green]")
+        if user_input.lower() in ['exit', 'quit']: break
+
+        # Gửi request lên Server (Không xử lý tại máy này)
         try:
-            user_input = Prompt.ask("[bold yellow]You[/bold yellow]")
-            
-            if user_input.lower() in ["exit", "quit", "bye"]:
-                console.print("[bold red]Shutting down systems... Goodbye![/bold red]")
-                break
+            with console.status("[bold green]Sending to Brain Cluster...[/bold green]"):
+                payload = {
+                    "user_input": user_input,
+                    "user_id": user_id
+                }
+                headers = {"x-api-key": API_KEY}
                 
-            if not user_input.strip():
-                continue
-
-            # Hiển thị trạng thái đang suy nghĩ
-            with Live(Spinner("dots", text="[cyan]Phil is thinking & coding...[/cyan]"), refresh_per_second=10, transient=True):
-                response = process_input(user_input)
-
-            # In câu trả lời
-            console.print(Panel(Markdown(response), title="[bold cyan]Phil AI[/bold cyan]", border_style="cyan"))
-            
-            # (Tùy chọn) Phát âm thanh nếu muốn CLI nói chuyện
-            # audio_path = speak_text(response)
-            # if audio_path:
-            #     os.system(f"aplay {audio_path}" if sys.platform == "linux" else f"start {audio_path}")
-
-        except KeyboardInterrupt:
-            console.print("\n[bold red]Force Interrupted.[/bold red]")
-            break
+                resp = requests.post(SERVER_URL, json=payload, headers=headers)
+                
+                if resp.status_code == 200:
+                    data = resp.json()
+                    console.print(Markdown(data['response']))
+                else:
+                    console.print(f"[red]Error {resp.status_code}: {resp.text}[/red]")
+                    
+        except Exception as e:
+            console.print(f"[red]Connection failed: {e}[/red]")
 
 if __name__ == "__main__":
     main()
