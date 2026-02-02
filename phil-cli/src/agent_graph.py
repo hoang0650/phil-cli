@@ -4,7 +4,8 @@ from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from src.config import CODER_API_BASE, VN_API_BASE, API_KEY
 from src.mcp_wrapper import MCPManager
-from src.tools_code import execute_in_sandbox
+from src.tools_project import list_files_recursive, read_file_content
+from src.tools_code import write_to_project, execute_in_sandbox
 from src.tools_vision import analyze_image
 from src.mpc_planner import mpc_optimize_plan
 from src.skills_manager import SkillManager
@@ -17,6 +18,7 @@ llm_coder = ChatOpenAI(model="casperhansen/llama-3-70b-instruct-awq", openai_api
 class AgentState(TypedDict):
     user_id: str
     user_input_vn: str
+    project_structure: str
     image_url: str
     goal_english: str      
     current_state: str     
@@ -67,6 +69,13 @@ def mcp_controller_node(state):
     """
 
 def perception_node(state):
+    # Lấy cây thư mục mới nhất (sau khi user upload hoặc AI vừa sửa)
+    structure = list_files_recursive(state['user_id'])
+    
+    # Nếu user upload file, đưa vào context
+    context_msg = ""
+    if structure:
+        context_msg = f"\n[CURRENT PROJECT STRUCTURE]:\n{structure}"
     """Pha 1: Nhận thức (Perception) - Hiểu mục tiêu và Nhìn (Vision)"""
     prompt = f"Dịch yêu cầu sau sang tiếng Anh kỹ thuật (ngắn gọn) để làm Goal cho MPC Agent: {state['user_input_vn']}"
     
@@ -80,9 +89,31 @@ def perception_node(state):
     technical_goal = res.content + vision_context
     
     return {
+        "project_structure": structure, "technical_plan": "...",
         "goal_english": technical_goal, 
         "current_state": "Starting task. No actions taken yet."
     }
+
+def coder_node(state):
+    """Coder: Được phép đọc file và sửa file"""
+    prompt = f"""You are a Lead Developer working on an existing project.
+    
+    PROJECT STRUCTURE:
+    {state['project_structure']}
+    
+    TASK: {state['technical_plan']}
+    
+    CAPABILITIES:
+    1. To READ a file, output: READ_FILE|path/to/file
+    2. To WRITE/FIX a file, output: 
+       ```python
+       # WRITE_FILE: path/to/file.py
+       ... code content ...
+       ```
+    3. To RUN command, output: CMD|python3 path/to/main.py
+    
+    Execute the task step-by-step.
+    """
 
 def mpc_controller_node(state):
     """Pha 2: MPC Controller - Tối ưu hóa hành động"""

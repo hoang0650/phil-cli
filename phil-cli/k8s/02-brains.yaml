@@ -1,0 +1,289 @@
+# ==========================================
+# 1. LLAMA-3 (CODER) - Port 8000
+# ==========================================
+apiVersion: apps/v1  # <--- SỬA: apps/v1
+kind: Deployment
+metadata:
+  name: llm-coder
+  namespace: phil-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-coder
+  template:
+    metadata:
+      labels:
+        app: llm-coder
+    spec:
+      runtimeClassName: nvidia
+      containers:
+      - name: llm-coder
+        image: vllm/vllm-openai:latest
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+        args: 
+        - "--model" 
+        - "casperhansen/llama-3-70b-instruct-awq" 
+        - "--quantization" 
+        - "awq" 
+        - "--dtype" 
+        - "half" 
+        - "--gpu-memory-utilization" 
+        - "0.50" 
+        - "--port" 
+        - "8000"
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - mountPath: /root/.cache/huggingface
+          name: model-storage
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+---
+apiVersion: v1
+kind: Service  # <--- THÊM SERVICE ĐỂ API SERVER GỌI ĐƯỢC
+metadata:
+  name: llm-coder
+  namespace: phil-ai
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: llm-coder
+
+---
+# ==========================================
+# 2. PHOGPT (VIETNAMESE) - Port 8001
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-vietnamese
+  namespace: phil-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-vietnamese
+  template:
+    metadata:
+      labels:
+        app: llm-vietnamese
+    spec:
+      runtimeClassName: nvidia
+      containers:
+      - name: llm-vietnamese
+        image: vllm/vllm-openai:latest
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+        args: 
+        - "--model" 
+        - "vinai/PhoGPT-4B-Chat" 
+        - "--trust-remote-code" 
+        - "--dtype" 
+        - "half" 
+        - "--gpu-memory-utilization" 
+        - "0.10" 
+        - "--port" 
+        - "8001"
+        ports:
+        - containerPort: 8001
+        volumeMounts:
+        - mountPath: /root/.cache/huggingface
+          name: model-storage
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-vietnamese
+  namespace: phil-ai
+spec:
+  ports:
+  - port: 8001
+    targetPort: 8001
+  selector:
+    app: llm-vietnamese
+
+---
+# ==========================================
+# 3. QWEN2-VL (VISION) - Port 8002
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-vision
+  namespace: phil-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-vision
+  template:
+    metadata:
+      labels:
+        app: llm-vision
+    spec:
+      runtimeClassName: nvidia
+      containers:
+      - name: llm-vision
+        image: vllm/vllm-openai:latest
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+        # SỬA LỖI CÚ PHÁP ARGS NGHIÊM TRỌNG Ở ĐÂY
+        args: 
+        - "--model" 
+        - "Qwen/Qwen2-VL-7B-Instruct-AWQ" 
+        - "--quantization" 
+        - "awq" 
+        - "--dtype" 
+        - "half" 
+        - "--gpu-memory-utilization" 
+        - "0.10" 
+        - "--max-model-len" 
+        - "4096"
+        - "--limit-mm-per-prompt" 
+        - "image=1" 
+        - "--port" 
+        - "8002"
+        ports:
+        - containerPort: 8002
+        volumeMounts:
+        - mountPath: /root/.cache/huggingface
+          name: model-storage
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-vision
+  namespace: phil-ai
+spec:
+  ports:
+  - port: 8002
+    targetPort: 8002
+  selector:
+    app: llm-vision
+
+---
+# ==========================================
+# 4. WHISPER (STT) - Port 8003
+# ==========================================
+apiVersion: apps/v1 # <--- SỬA TỪ 'kind: Service' THÀNH apps/v1 Deployment
+kind: Deployment
+metadata:
+  name: stt-engine
+  namespace: phil-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stt-engine
+  template:
+    metadata:
+      labels:
+        app: stt-engine
+    spec:
+      runtimeClassName: nvidia
+      containers:
+      - name: stt-engine
+        image: fedirz/faster-whisper-server:latest-cuda
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        - name: WHISPER_MODEL
+          value: "large-v3"
+        ports:
+        - containerPort: 8003
+        volumeMounts:
+        - mountPath: /root/.cache/huggingface
+          name: model-storage
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stt-engine
+  namespace: phil-ai
+spec:
+  ports:
+  - port: 8000 # Whisper server mặc định chạy port 8000 bên trong container
+    targetPort: 8000
+    name: http
+  selector:
+    app: stt-engine
+
+---
+# ==========================================
+# 5. XTTS (TTS) - Port 8004
+# ==========================================
+apiVersion: apps/v1 # <--- SỬA LẠI TỪ 'kind: Service'
+kind: Deployment
+metadata:
+  name: tts-engine
+  namespace: phil-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tts-engine
+  template:
+    metadata:
+      labels:
+        app: tts-engine
+    spec:
+      runtimeClassName: nvidia
+      containers:
+      - name: tts-engine
+        image: ghcr.io/coqui-ai/tts:latest
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        command: ["python3", "-m", "TTS.server.server"]
+        args: 
+        - "--model_name" 
+        - "tts_models/multilingual/multi-dataset/xtts_v2" 
+        - "--port" 
+        - "8004" 
+        - "--use_cuda" 
+        - "true"
+        ports:
+        - containerPort: 8004
+        volumeMounts:
+        - mountPath: /root/.local/share/tts # <--- THÊM DẤU '/' Ở ĐẦU
+          name: model-storage
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tts-engine
+  namespace: phil-ai
+spec:
+  ports:
+  - port: 8004
+    targetPort: 8004
+  selector:
+    app: tts-engine

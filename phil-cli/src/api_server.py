@@ -83,16 +83,6 @@ async def sync_user_data(payload: UserSyncPayload, authorized: bool = Depends(ve
 
 @app.post("/v1/keys/generate")
 async def generate_api_key(req: KeyRequest, x_node_token: Optional[str] = Header(None)):
-    """
-    User yêu cầu cấp key.
-    
-    Logic Bảo mật nâng cao (Optional): 
-    1. Phil nhận 'x_node_token' từ Header.
-    2. Phil gọi ngược lại Node Server: GET /api/verify_token (dùng httpx).
-    3. Nếu Node Server OK -> Mới cho tạo key.
-    
-    Ở đây ta làm logic check DB nội bộ (đã được Webhook sync).
-    """
     
     # 1. Kiểm tra user có tồn tại trong DB nội bộ chưa (Do Webhook sync chưa?)
     user = database.get_user_info(req.username)

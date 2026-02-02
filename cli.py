@@ -20,7 +20,6 @@ def main():
         user_input = Prompt.ask(f"[green]{user_id}[/green]")
         if user_input.lower() in ['exit', 'quit']: break
 
-        # Gửi request lên Server (Không xử lý tại máy này)
         try:
             with console.status("[bold green]Sending to Brain Cluster...[/bold green]"):
                 payload = {

@@ -1,31 +1,19 @@
-# --- 1. AI FRAMEWORK & LOGIC ---
 langchain
 langchain-core
 langchain-openai
 langchain-community
 langgraph
 python-dotenv
-
-# --- 2. WEB INTERFACE (UI) ---
 streamlit
 watchdog
-
-# --- 3. TOOLS & UTILITIES ---
-duckduckgo-search    # Tìm kiếm Google/DuckDuckGo
-requests             # Gọi API HTTP (Discord, TTS, STT)
-httpx                # Async requests
-pydub                # Xử lý file âm thanh
-Pillow               # Xử lý hình ảnh (Vision)
-
-# --- 4. MODEL CONTEXT PROTOCOL (MCP) ---
-mcp                  # SDK chuẩn để kết nối Zalo, Git, DB...
-
-# --- 5. SOCIAL MEDIA SERVERS ---
-python-telegram-bot  # Thư viện cho Telegram MCP Server
-discord.py           # Thư viện cho Discord MCP Server (Mạnh hơn requests)
-
-# --- 6. SELF-EVOLUTION (FINE-TUNING) ---
-# Thư viện Unsloth giúp train Llama-3 nhanh gấp 2 lần, nhẹ bộ nhớ
+duckduckgo-search
+requests
+httpx
+pydub
+Pillow
+mcp
+python-telegram-bot
+discord.py
 unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
 trl
 transformers

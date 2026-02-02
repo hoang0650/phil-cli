@@ -1,0 +1,76 @@
+# SANDBOX POD (Chạy nền để nhận lệnh exec)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-sandbox
+  namespace: phil-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-sandbox
+  template:
+    metadata:
+      labels:
+        app: ai-sandbox
+    spec:
+      containers:
+      - name: sandbox
+        image: phil-agent:latest # Image phải được build trước
+        imagePullPolicy: Never   # Dùng image local
+        command: ["tail", "-f", "/dev/null"]
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-storage
+      volumes:
+      - name: workspace-storage
+        persistentVolumeClaim:
+          claimName: workspace-pvc
+---
+# API SERVER (CONTROLLER)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  namespace: phil-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      containers:
+      - name: api-server
+        image: phil-agent:latest
+        imagePullPolicy: Never
+        command: ["python3", "src/api_server.py"]
+        env:
+        - name: CODER_API_BASE
+          value: "http://llm-coder:8000/v1"
+        # ... Thêm các biến ENV khác (VN_API, WEBHOOK_SECRET...) ...
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-storage
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+      volumes:
+      - name: workspace-storage
+        persistentVolumeClaim:
+          claimName: workspace-pvc
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock # Cho phép điều khiển Docker của Node
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-server
+  namespace: phil-ai
+spec:
+  ports: [{port: 8080, targetPort: 8080}]
+  selector:
+    app: api-server
