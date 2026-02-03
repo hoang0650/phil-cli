@@ -1,13 +1,12 @@
 version: '3.9'
 
 services:
-  # --- 1. SECURITY GATEWAY (NGINX) ---
   gateway:
     image: nginx:latest
     container_name: phil_gateway
     restart: always
     ports:
-      - "80:80" # Public Port
+      - "80:80" 
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
@@ -16,7 +15,6 @@ services:
     networks:
       - phil_network
 
-  # --- 2. AI BRAINS (MODELS) ---
   llm-coder: # Llama-3-70B
     image: vllm/vllm-openai:latest
     container_name: ai_brain_coder
@@ -77,9 +75,6 @@ services:
     volumes: [ "./models:/root/.local/share/tts" ]
     networks: [ "phil_network" ]
 
-  # --- 3. LOGIC & EXECUTION ---
-  
-  # Sandbox: Nơi code thực thi (Isolated)
   code-sandbox:
     build: 
       context: .
@@ -93,7 +88,19 @@ services:
     working_dir: /workspace
     networks: [ "phil_network" ]
 
-  # API Server: Controller trung tâm (FastAPI)
+  db-postgres:
+    image: postgres:15-alpine
+    container_name: phil_db_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=phil_admin
+      - POSTGRES_PASSWORD=secure_password_change_me
+      - POSTGRES_DB=phil_ai_platform
+    ports:
+      - "5432:5432" # Chỉ mở nếu muốn debug từ ngoài, Prod nên đóng
+    volumes: [ "./postgres_data:/var/lib/postgresql/data" ]
+    networks: [ "phil_network" ]
+
   api-server:
     build: 
       context: .

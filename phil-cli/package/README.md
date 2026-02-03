@@ -61,7 +61,7 @@ Sau khi đăng nhập thành công, thông tin sẽ được lưu tại `~/.phil
 Bắt đầu cuộc hội thoại nhanh để hỏi đáp, viết snippet code ngắn.
 
 ```bash
-pip chat
+phil chat
 ```
 * **Gõ** `exit` hoặc `quit` để thoát.
 * Phil hỗ trợ hiển thị Markdown, Code Highlighting đẹp mắt ngay trên Terminal.
@@ -105,7 +105,7 @@ Nếu bạn muốn đóng gói lại source code thành file cài đặt .whl đ
 pip install build
 
 # 2. Build gói
-cd phil-client-package
+cd package
 python -m build
 
 # 3. Kết quả

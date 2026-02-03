@@ -3,10 +3,10 @@ from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from src.config import CODER_API_BASE, VN_API_BASE, API_KEY
-from src.mcp_wrapper import MCPManager
-from src.tools_project import list_files_recursive, read_file_content
-from src.tools_code import write_to_project, execute_in_sandbox
-from src.tools_vision import analyze_image
+from src.tools.mcp_wrapper import MCPManager
+from src.tools.tools_project import list_files_recursive, read_file_content
+from src.tools.tools_code import write_to_project, execute_in_sandbox
+from src.tools.tools_vision import analyze_image
 from src.mpc_planner import mpc_optimize_plan
 from src.skills_manager import SkillManager
 
@@ -147,7 +147,6 @@ def actuator_node(state):
 
 def skill_learner_node(state):
     """Pha 4: Học tập (Learning) - Nếu thành công, tự lưu thành Skill"""
-    # Logic: Nếu code chạy thành công (không lỗi) và đây là iteration cuối, hỏi xem có nên lưu skill không
     if "ERROR" not in state['exec_result']:
         prompt = f"""Analyze this code execution. Is it a reusable function worth saving as a Skill?
         Goal: {state['goal_english']}
@@ -193,8 +192,6 @@ workflow.add_edge("actuator", "skill_learner")
 
 def check_convergence(state):
     """Kiểm tra xem sai số giữa Goal và State đã đủ nhỏ chưa"""
-    # Nếu kết quả có "SUCCESS" hoặc đã chạy quá 5 lần -> Dừng
-    # Nếu còn Lỗi -> Quay lại MPC Controller để chỉnh code
     if "ERROR" in state['exec_result'] and state['iterations'] < 5:
         return "mpc_controller"
     return "translator_out"

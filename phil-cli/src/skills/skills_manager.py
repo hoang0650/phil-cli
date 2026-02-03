@@ -15,15 +15,12 @@ if not os.path.exists(REGISTRY_FILE):
 class SkillManager:
     @staticmethod
     def save_skill(name, code, description):
-        """Lưu một đoạn code thành kỹ năng tái sử dụng"""
         # 1. Clean tên skill để làm tên file (chỉ a-z, 0-9)
         safe_name = re.sub(r'[^a-zA-Z0-9_]', '', name.lower())
-        file_path = os.path.join(SKILLS_DIR, f"{safe_name}.py")
-        
+        file_path = os.path.join(SKILLS_DIR, f"{safe_name}.py")       
         # 2. Lưu code python
         with open(file_path, "w", encoding="utf-8") as f:
-            f.write(code)
-            
+            f.write(code)        
         # 3. Cập nhật Registry
         with open(REGISTRY_FILE, "r") as f:
             registry = json.load(f)
