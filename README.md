@@ -5,6 +5,8 @@
 ![Status](https://img.shields.io/badge/Status-Active-success)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![GPU](https://img.shields.io/badge/GPU-NVIDIA_A100-green)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## 📖 Giới thiệu
 
@@ -36,14 +38,14 @@ Hệ thống hoạt động theo mô hình **Client-Server** bảo mật:
 graph TD
     User((User)) -->|CLI / Web| Gateway[Nginx Gateway]
     Gateway --> API[FastAPI Controller]
-    
+
     subgraph "Compute Plane (Runpod GPU)"
         API -->|Task| Llama[Llama-3-70B Logic]
         API -->|Task| PhoGPT[PhoGPT Vietnamese]
         API -->|Exec| Sandbox[Docker Sandbox]
         Llama <--> Vision[Qwen2-VL]
     end
-    
+
     subgraph "Control Plane"
         API --> DB[(PostgreSQL)]
         API --> Logs[Audit Logs]
