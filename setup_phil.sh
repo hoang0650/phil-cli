@@ -1,29 +1,55 @@
 #!/bin/bash
 
-echo "Installing Phil-CLI..."
+# Phil AI Agent - Enterprise Setup Script
+# © 2026 PHGROUP TECHNOLOGY SOLUTIONS CO., LTD
 
-# Check for Python
-if ! command -v python3 &> /dev/null
-then
-    echo "Python3 could not be found. Please install it first."
-    exit
+set -e
+
+echo "------------------------------------------------"
+echo "🚀 Khởi tạo hệ thống Phil AI Agent..."
+echo "------------------------------------------------"
+
+# 1. Kiểm tra Python
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Lỗi: Không tìm thấy Python3. Vui lòng cài đặt Python 3.10 trở lên."
+    exit 1
 fi
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
+# 2. Tạo môi trường ảo cho Server
+echo "📦 Đang tạo môi trường ảo cho Server..."
+python3 -m venv venv_server
+source venv_server/bin/activate
 
-# Install dependencies
-pip install anthropic openai python-dotenv docker rich sqlalchemy
+# 3. Cài đặt các thư viện cần thiết
+echo "📥 Đang cài đặt các thư viện phụ thuộc..."
+pip install --upgrade pip
+pip install -r requirement.txt
 
-# Create .env file if it doesn't exist
+# 4. Cấu hình biến môi trường mẫu
 if [ ! -f .env ]; then
-    echo "Creating .env file. Please add your API keys."
-    echo "ANTHROPIC_API_KEY=" > .env
-    echo "OPENAI_API_KEY=" >> .env
-    echo "PHIL_MODEL=claude-3-5-sonnet-20241022" >> .env
+    echo "📝 Tạo file cấu hình .env mẫu..."
+    cp .env.example .env || {
+        echo "CODER_API_BASE=http://localhost:8000/v1" > .env
+        echo "VN_API_BASE=http://localhost:8001/v1" >> .env
+        echo "API_KEY=phil_admin_secret_$(openssl rand -hex 8)" >> .env
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/phil_db" >> .env
+    }
+    echo "⚠️ Vui lòng chỉnh sửa file .env để cấu hình đúng các URL của vLLM."
 fi
 
-echo "Setup complete. To run Phil-CLI:"
-echo "source venv/bin/activate"
-echo "python3 -m phil-cli.phil"
+# 5. Cài đặt CLI Client
+echo "💻 Đang cài đặt Phil CLI Client..."
+cd phil-cli/package
+pip install .
+cd ../..
+
+echo "------------------------------------------------"
+echo "✅ Cài đặt hoàn tất!"
+echo "------------------------------------------------"
+echo "Để khởi động Server:"
+echo "  source venv_server/bin/activate"
+echo "  python3 -m src.api_server"
+echo ""
+echo "Để sử dụng CLI:"
+echo "  phil-cli --help"
+echo "------------------------------------------------"

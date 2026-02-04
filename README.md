@@ -1,6 +1,6 @@
 # 🤖 Phil AI Agent (phil-cli)
 
-**Phil Agentic AI System** - Hệ thống AI Tự chủ Đa phương thức (Multimodal), có khả năng Nghe, Nói, Nhìn, Lập trình và Tự học.
+**Phil Agentic AI System** - Hệ thống AI Tự chủ Đa phương thức (Multimodal) dành cho Doanh nghiệp. Tích hợp khả năng Nghe, Nói, Nhìn, Lập trình và Tự học trong một môi trường bảo mật tuyệt đối.
 
 ![Status](https://img.shields.io/badge/Status-Active-success)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
@@ -32,24 +32,55 @@ Hệ thống hoạt động dựa trên kiến trúc **Dual-Brain**:
 
 ---
 
-Hệ thống hoạt động theo mô hình **Client-Server** bảo mật:
+## 🌟 Tại sao chọn Phil AI cho Doanh nghiệp?
+
+Phil AI không chỉ là một chatbot; đó là một **Nhân viên AI (AI Workforce)** có khả năng thực thi các tác vụ kỹ thuật phức tạp trên hạ tầng riêng của doanh nghiệp.
+
+| Tính năng | Lợi ích cho Doanh nghiệp |
+| --- | --- |
+| **Self-hosted (On-premise)** | Dữ liệu và mã nguồn không bao giờ rời khỏi hạ tầng của công ty. Đảm bảo tuân thủ các tiêu chuẩn bảo mật khắt khe nhất. |
+| **Dual-Brain Architecture** | Kết hợp sức mạnh logic của `Llama-3-70B` và sự am hiểu văn hóa Việt của `PhoGPT`. |
+| **Autonomous Coding** | Tự động viết, kiểm thử và sửa lỗi mã nguồn trong môi trường Sandbox an toàn. |
+| **Enterprise Security** | Tích hợp sẵn hệ thống Audit Logs, RBAC (Phân quyền dựa trên vai trò) và API Gateway. |
+| **Scalability** | Sẵn sàng triển khai trên Kubernetes, hỗ trợ hàng ngàn người dùng đồng thời. |
+
+---
+
+## 🏗️ Kiến trúc Hệ thống
+
+Hệ thống được thiết kế theo mô hình Microservices hiện đại, tối ưu cho việc mở rộng và bảo mật.
 
 ```mermaid
 graph TD
-    User((User)) -->|CLI / Web| Gateway[Nginx Gateway]
-    Gateway --> API[FastAPI Controller]
-
-    subgraph "Compute Plane (Runpod GPU)"
-        API -->|Task| Llama[Llama-3-70B Logic]
-        API -->|Task| PhoGPT[PhoGPT Vietnamese]
-        API -->|Exec| Sandbox[Docker Sandbox]
-        Llama <--> Vision[Qwen2-VL]
+    subgraph "Client Layer"
+        CLI[Phil CLI]
+        Web[Web Dashboard]
+        API[REST API]
     end
 
-    subgraph "Control Plane"
-        API --> DB[(PostgreSQL)]
-        API --> Logs[Audit Logs]
+    subgraph "Security & Gateway"
+        Nginx[Nginx Gateway / WAF]
+        Auth[Auth Service - JWT/RBAC]
     end
+
+    subgraph "Brain Cluster (GPU)"
+        vLLM[vLLM Inference Engine]
+        Llama[Llama-3 Logic]
+        PhoGPT[PhoGPT Vietnamese]
+        Qwen[Qwen-VL Vision]
+    end
+
+    subgraph "Execution Layer"
+        Sandbox[Docker Sandbox]
+        MCP[MCP Servers - Git/DB/Slack]
+    end
+
+    CLI & Web & API --> Nginx
+    Nginx --> Auth
+    Auth --> vLLM
+    vLLM --> Llama & PhoGPT & Qwen
+    Llama --> Sandbox
+    Sandbox --> MCP
 ```
 
 ---
@@ -121,60 +152,43 @@ PHIL-CLI/
     └── models/                 # Cache model HuggingFace
 ```
 
-## 🚀 Tính Năng Nổi Bật
+## Cài đặt
 
-| Tính năng | Mô tả |
-| :--- | :--- |
-| **Global Scalability** | Hỗ trợ phục vụ đồng thời nhiều user nhờ Nginx Load Balancing và Async Queue. |
-| **Model Predictive Control** | Sử dụng thuật toán MPC để lập kế hoạch nhiều bước (Thinking -> Planning -> Coding -> Review). |
-| **Coding Master** | Tự động viết, chạy, debug code Python/Bash trong Sandbox bị cô lập. |
-| **Full Multimodal** | Nghe giọng nói, nhìn hình ảnh/tài liệu và phản hồi bằng giọng nói tự nhiên. |
-| **Self-Evolution** | Tự động fine-tune model (Unsloth) sau mỗi chu kỳ hoạt động để thông minh hơn. |
+### 1. Yêu cầu Hệ thống
+
+- **GPU:** Tối thiểu 24GB VRAM (RTX 3090/4090) cho bản rút gọn, hoặc A100 cho bản đầy đủ.
+
+- **OS:** Ubuntu 22.04+ với Docker & NVIDIA Container Toolkit.
+
+### 2. Cài đặt Server
+
+```bash
+git clone https://github.com/hoang0650/phil-cli.git
+cd phil-cli
+cp .env.example .env
+# Cấu hình API Keys và Model Paths trong .env
+docker-compose up -d
+```
+
+### 3. Cài đặt Client (CLI )
+
+```bash
+pip install ./phil-cli/package
+phil-cli login <YOUR_API_KEY> --server http://your-server-ip:8080
+phil-cli chat
+```
 
 ---
 
-## Cài đặt
+## 🛠️ Các lệnh CLI chính
 
-### 1. Yêu cầu phần cứng
+- `phil-cli login`: Xác thực với hệ thống.
 
-* **Server:** GPU Cluster (Runpod/AWS/GCP) với tối thiểu 1x A100 (80GB VRAM) hoặc 2x A6000.
-* **Storage:** 200GB SSD.
-* **Docker & Docker Compose.**
+- `phil-cli chat`: Bắt đầu phiên làm việc tương tác.
 
-### Bước 1: Thiết lập Môi trường
-```bash
-# Clone repository
-git clone [https://github.com/your-repo/phil-cli.git](https://github.com/your-repo/phil-cli.git)
-cd phil-cli
+- `phil-cli fix <path>`: Tự động phân tích và sửa lỗi toàn bộ dự án trong thư mục.
 
-# Cấu hình biến môi trường (Bảo mật)
-cp .env.example .env
-# Chỉnh sửa .env: Thêm API Keys, Tokens cho Telegram/Discord
-```
-
-### Bước 2: Khởi động Hệ thống (Backend)
-
-```bash
-# Chạy hạ tầng AI & Gateway bảo mật
-docker-compose up -d
-
-# Kiểm tra trạng thái
-docker-compose ps
-```
-Lúc này, hệ thống sẽ ẩn toàn bộ port 8000-8004 và chỉ mở port **80 (HTTP)** hoặc **443 (HTTPS).**
-
-### Bước 3: Client Connection
-Bạn có thể kết nối với Phil thông qua 3 giao diện:
-1. **CLI (Terminal):** Dành cho Developer.
-```bash
-python cli.py --user="admin"
-```
-2. **Web UI (Streamlit):** Dành cho End-user.
-```bash
-streamlit run ui/app.py
-```
-3. **API Integration:** Tích hợp vào Mobile App hoặc Website khác.
-Endpoint: `http://your-server-ip/api/coder/v1/chat/completions`
+- `phil-cli status`: Kiểm tra tình trạng kết nối và tài nguyên.
 
 ---
 
@@ -184,8 +198,7 @@ Endpoint: `http://your-server-ip/api/coder/v1/chat/completions`
 ```bash
 "gdrive": {
     "command": "npx",
-    "args": ["-y", "@modelcontextprotocol/server-gdrive"]
-}
+    "args":["-y", "@modelcontextprotocol/server-gdrive"]}
 ```
 
 ### 🔒 Bảo Mật & Multi-tenancy
@@ -206,71 +219,33 @@ Dự án Phil AI Agent là mã nguồn mở. Chúng tôi chào đón mọi đón
 
 * Cải thiện bộ dataset Tiếng Việt cho PhoGPT.
 
-### 📜 License
-MIT License. Created by PHGroup.
+---
 
-1. 🏗️ **Kiến trúc AI Agent Production (SaaS Scale)**
-Chúng ta sẽ chuyển từ kiến trúc Monolithic (Docker Compose đơn giản) sang kiến trúc **Microservices trên Kubernetes (K8s)** để đảm bảo khả năng mở rộng (Scaling) và chịu lỗi (Fault Tolerance).
-**Sơ đồ luồng dữ liệu:**
-1. **Clients (Đa nền tảng):**
-* **Phil CLI:** Dành cho Developer (Terminal).
-* **Web Dashboard:** Dành cho Manager (Quản lý Users, Billing, Audit Logs).
-* **IDE Extension:** Plugin cho VS Code/IntelliJ (Code trực tiếp).
-2. **Gateway Layer (Cổng an ninh):**
-* **Load Balancer:** Phân phối tải.
-* **API Gateway (Kong/Nginx):** Rate Limiting, xác thực API Key, Routing.
-* **WAF (Web Application Firewall):** Chống tấn công DDoS, SQL Injection.
-3. **Control Plane (Bộ não quản lý - CPU Only):** 
-* **Auth Service:** Quản lý User, SSO (Google, Microsoft), RBAC.
-* **Billing Service:** Tính toán Token usage, tích hợp Stripe/PayPal.
-* **Orchestrator (Manager):** Nhận request, đẩy vào hàng đợi (Queue).
-* **Database:** PostgreSQL (User data), Redis (Queue & Cache).
-4. **Compute Plane (Nhà máy AI - GPU Heavy):**
-* Các worker này sẽ auto-scale dựa trên độ dài hàng đợi.
-* **Inference Cluster:** Chạy vLLM (Llama-3, Qwen2, PhoGPT).
-* **Tool Sandbox Cluster:** Chạy Docker container cô lập để thực thi code an toàn.
----
-2. 🚀 **Định vị Sản phẩm (Product Positioning)**
-**"Phil AI Workforce Platform"**
-**Slogan**: Your Phil AI DevOps Engineer. Private. Secure. Limitless.
-| Gói(Package) | Đối tượng(Personal) | Tính năng (Feature Set) | Giá trị cốt lỗi (USP) |
-| :--- | :--- | :--- | :--- |
-| **Developer (Free/Pro)** | Cá nhân, Freelancer | CLI, Basic Chat, Code Fix (1 dự án/lần). | Giá trị **Nhanh & Tiện:** Cài đặt 1 lệnh không cần GPU xịn. |
-| **Team (SaaS)Startups** | Dev Teams | Web UI, Share Knowledge (RAG), Multi-user, CI/CD Integration. | **Cộng tác:** AI hiểu context của cả team, không phải dạy lại từ đầu. |
-| **Enterprise (Self-hosted)** | Ngân hàng, Gov, Corp | Triển khai On-Premise, Audit Logs, SSO, VPN Support, SLA 99.9%. | **Bảo mật & Kiểm soát:** Dữ liệu code không bao giờ rời khỏi server công ty. |
----
-3. 🔐 **Chuẩn hóa Agent cho Doanh nghiệp (Enterprise Readiness)**
-**A. Bảo mật & Định danh (Identity & Access)**
-* **SSO (Single Sign-On):** Doanh nghiệp không dùng user/pass thường. Họ dùng Okta, Active Directory hoặc Google Workspace.
- * Tech stack: Tích hợp `Dex` hoặc `Keycloak` vào Auth Service.
-* **RBAC (Role-Based Access Control):**
- * `Admin`: Quản lý billing, xem log toàn hệ thống.
- * `Developer`: Được chạy code, tạo API Key.
- * `Viewer`: Chỉ được xem lịch sử chat (cho Project Manager).
-* **Audit Logs (Nhật ký kiểm toán):**
- * Ghi lại **mọi hành động:** "Ai? Làm gì? Lúc nào? Tại sao?".
- * Ví dụ: "User A yêu cầu AI xóa database lúc 10:00 AM". Đây là tính năng sống còn để quy trách nhiệm.
-**B. An toàn dữ liệu (Data Privacy)**
-* **Data Isolation (Cô lập dữ liệu):**
- * Dữ liệu Vector (RAG) của Công ty A không được để Công ty B tìm thấy.
- * Giải pháp: Dùng Namespace trong Vector DB hoặc mô hình Single-tenant (Mỗi khách hàng 1 Database riêng).
-* **PII Redaction (Che thông tin nhạy cảm):**
- * Trước khi gửi text lên LLM, phải có module tự động quét và che Số điện thoại, Email, Số thẻ tín dụng, API Key (nếu lỡ paste vào).
-**C. Quy trình chuẩn hóa Code (Compliance)**
-Doanh nghiệp cần AI viết code chuẩn, không phải code chạy được là xong.
-* **Linting & Security Scan:** Khi Phil viết code xong, trước khi trả về cho user, code đó phải được chạy qua `SonarQube` hoặc `Bandit` (Python security scanner) trong Sandbox để đảm bảo không có lỗ hổng bảo mật.
+## 📈 Lộ trình Phát triển (Roadmap )
+
+- [x] **Giai đoạn 1:** MVP với Docker Compose và CLI cơ bản.
+
+- [ ] **Giai đoạn 2:** Tích hợp vLLM để tối ưu tốc độ phản hồi (Inference Speed).
+
+- [ ] **Giai đoạn 3:** Hệ thống Dashboard quản trị tập trung cho doanh nghiệp.
+
+- [ ] **Giai đoạn 4:** Hỗ trợ Fine-tuning tự động dựa trên dữ liệu riêng của khách hàng.
 
 ---
 
-4. **Roadmap chuyển đổi (Next Steps)**
-**Giai đoạn 1: MVP (Hiện tại)**
-* Docker Compose.Auth cơ bản (SQLite).CLI Client.
-* Mục tiêu: Chứng minh tính năng (Proof of Concept).
-**Giai đoạn 2: Cloud SaaS (Tháng tới)Tách Frontend (Next.js) và Backend (FastAPI).**
-* Dùng PostgreSQL thay SQLite.
-* Tích hợp Stripe/Paypal subscription.
-* Deploy lên K8s (Cluster nhỏ).
-* Mục tiêu: Có doanh thu đầu tiên (MRR).
-**Giai đoạn 3: Enterprise (Quý tới)Xây dựng module Audit Logs & SSO.**
-Hỗ trợ triển khai "Air-gapped" (Không internet) cho khách hàng bảo mật cao.
-Đạt chứng chỉ SOC2 (Lâu dài).
+## 🤝 Liên hệ Hợp tác
+
+Dự án được phát triển bởi **PHGROUP TECHNOLOGY SOLUTIONS CO., LTD**. Chúng tôi cung cấp các giải pháp tùy chỉnh AI cho doanh nghiệp:
+
+- Triển khai AI Agent riêng tư.
+
+- Huấn luyện mô hình ngôn ngữ theo dữ liệu chuyên ngành.
+
+- Tích hợp AI vào quy trình vận hành sẵn có.
+
+**Email:** [contact@phgrouptechs.com](mailto:contact@phgrouptechs.com) | **Website:** [https://phgrouptechs.com](https://phgrouptechs.com)
+
+---
+
+*© 2026 PHGROUP TECHNOLOGY SOLUTIONS CO., LTD*
+

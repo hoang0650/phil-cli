@@ -222,7 +222,13 @@ async def chat_endpoint(
         "user_input_vn": req.user_input,
         "image_url": req.image_url,
         "iterations": 0,
-        "technical_plan": "", "code": "", "exec_result": ""
+        "project_structure": "",
+        "goal_english": "",
+        "current_state": "",
+        "mpc_plan": "",
+        "code": "",
+        "exec_result": "",
+        "final_response_vn": ""
     }
     
     try:
