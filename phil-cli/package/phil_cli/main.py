@@ -5,6 +5,7 @@ from rich.prompt import Prompt
 from rich.spinner import Spinner
 from .config import save_config, load_config
 from .api import send_chat
+from .mcp_commands import app as mcp_app
 import shutil
 import os
 
@@ -98,6 +99,9 @@ def fix(folder_path: str = ".", instruction: str = "Tìm lỗi và sửa giúp t
         console.print(Markdown(response.get("response", "")))
         if "download_url" in response:
              console.print(f"[green]📦 Tải project đã sửa tại: {response['download_url']}[/green]")
+
+# Thêm lệnh MCP như subcommand
+app.add_typer(mcp_app, name="mcp", help="🏗️ Quản lý MCP (Model Context Protocol) servers và tools")
 
 def main():
     app()

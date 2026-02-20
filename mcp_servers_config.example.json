@@ -1,0 +1,55 @@
+{
+  "mcpServers": {
+    "git-server": {
+      "command": "node",
+      "args": ["mcp-server-git", "--repository", "/workspace/repo"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "slack": {
+      "command": "node", 
+      "args": ["mcp-server-slack"],
+      "env": {
+        "SLACK_TOKEN": "${SLACK_TOKEN}",
+        "SLACK_SIGNING_SECRET": "${SLACK_SIGNING_SECRET}"
+      }
+    },
+    "database": {
+      "command": "node",
+      "args": ["mcp-server-postgres"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace/projects"]
+    },
+    "gdrive": {
+      "command": "npx", 
+      "args": ["-y", "@modelcontextprotocol/server-gdrive"]
+    },
+    "telegram": {
+      "command": "node",
+      "args": ["mcp-server-telegram"],
+      "env": {
+        "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}"
+      }
+    },
+    "discord": {
+      "command": "node",
+      "args": ["mcp-server-discord"],
+      "env": {
+        "DISCORD_TOKEN": "${DISCORD_TOKEN}"
+      }
+    },
+    "zalo": {
+      "command": "node", 
+      "args": ["mcp-server-zalo"],
+      "env": {
+        "ZALO_OA_TOKEN": "${ZALO_OA_TOKEN}"
+      }
+    }
+  }
+}

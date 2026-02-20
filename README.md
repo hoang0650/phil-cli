@@ -65,14 +65,16 @@ graph TD
 
     subgraph "Brain Cluster (GPU)"
         vLLM[vLLM Inference Engine]
-        Llama[Llama-3 Logic]
-        PhoGPT[PhoGPT Vietnamese]
-        Qwen[Qwen-VL Vision]
+        DeepSeek[DeepSeek Logic]
+        Qwen[Qwen2.5 Vietnamese]
+        OpenGVLab[OpenGVLab Vision]
+        OpenAI[Whisper Ears]
+        F5-TTS[E2-TTS Mouth]
     end
 
     subgraph "Execution Layer"
         Sandbox[Docker Sandbox]
-        MCP[MCP Servers - Git/DB/Slack]
+        MCP[MCP Servers - Git/DB/Slack/Telegram/Discord/Zalo]
     end
 
     CLI & Web & API --> Nginx
@@ -190,10 +192,84 @@ phil-cli chat
 
 - `phil-cli status`: Kiểm tra tình trạng kết nối và tài nguyên.
 
+### 🔌 Lệnh MCP (Model Context Protocol)
+
+Quản lý kết nối với các MCP servers (Git, Database, Slack, Telegram, Discord, Zalo...):
+
+#### 📋 Liệt kê và quản lý servers
+- `phil-cli mcp list`: Liệt kê tất cả MCP servers đã cấu hình
+- `phil-cli mcp list <server_name> --schema`: Xem schema của server cụ thể
+- `phil-cli mcp status`: Kiểm tra trạng thái daemon MCP
+
+#### 🔧 Gọi tools và functions
+- `phil-cli mcp call <server.tool> key=value`: Gọi tool với arguments
+- `phil-cli mcp call <server.tool> --args '{"limit": 5}'`: Gọi tool với JSON arguments
+- `phil-cli mcp call <url> --args-file args.json`: Gọi tool từ URL với file arguments
+- `phil-cli mcp call --stdio "command" tool_name arg=value`: Gọi tool qua stdio transport
+
+#### 🔐 Xác thực và cấu hình
+- `phil-cli mcp auth <server_name>`: Xác thực với MCP server (OAuth/API Key)
+- `phil-cli mcp auth <server_name> --reset`: Reset xác thực
+- `phil-cli mcp config list`: Liệt kê cấu hình MCP
+- `phil-cli mcp config get <server_name>`: Xem cấu hình server cụ thể
+- `phil-cli mcp config add <server_name> --type http --url http://localhost:8080`: Thêm server mới
+- `phil-cli mcp config add <server_name> --type stdio --cmd "python server.py"`: Thêm stdio server
+- `phil-cli mcp config remove <server_name>`: Xóa server khỏi cấu hình
+- `phil-cli mcp config import --file mcp_config.json`: Import cấu hình từ file
+
+#### 🚀 Quản lý daemon
+- `phil-cli mcp daemon start`: Khởi động MCP daemon
+- `phil-cli mcp daemon stop`: Dừng MCP daemon
+- `phil-cli mcp daemon restart`: Khởi động lại MCP daemon
+- `phil-cli mcp daemon status --port 8080`: Kiểm tra trạng thái daemon trên port cụ thể
+
+#### 💡 Ví dụ thực tế
+```bash
+# Kết nối với Git MCP server
+phil-cli mcp config add git-server --type http --url http://localhost:3001
+phil-cli mcp auth git-server
+phil-cli mcp call git-server.list_repos limit=10
+
+# Gọi Slack API qua MCP
+phil-cli mcp call slack.post_message channel=#general text="Hello from Phil-CLI!"
+
+# Sử dụng Database MCP
+phil-cli mcp call database.query sql="SELECT * FROM users LIMIT 5"
+
+# Import cấu hình MCP từ file
+phil-cli mcp config import --file mcp_servers_config.json
+```
+
 ---
 
-### 🔌 Mở rộng (MCP)
-Để kết nối thêm công cụ (ví dụ: Google Drive, Slack), hãy chỉnh sửa file `mcp_servers_config.json`:
+### 🔌 Mở rộng (MCP) - Cấu hình chi tiết
+Để kết nối thêm công cụ (ví dụ: Google Drive, Slack), hãy chỉnh sửa file `mcp_servers_config.json` hoặc sử dụng các lệnh CLI MCP ở trên.
+
+#### Cấu hình mẫu cho các MCP servers phổ biến:
+
+**1. Git Server (HTTP)**
+```bash
+phil-cli mcp config add git-server --type http --url http://localhost:3001 --env "TOKEN=your_github_token"
+```
+
+**2. Slack Integration (HTTP)**
+```bash
+phil-cli mcp config add slack --type http --url https://slack.mcp.server --env "SLACK_TOKEN=xoxb-your-token"
+```
+
+**3. Database Server (HTTP)**
+```bash
+phil-cli mcp config add database --type http --url http://localhost:3002 --env "DB_URL=postgresql://user:pass@localhost/db"
+```
+
+**4. File System (stdio)**
+```bash
+phil-cli mcp config add filesystem --type stdio --cmd "npx -y @modelcontextprotocol/server-filesystem /home/user/projects"
+```
+
+**5. Google Drive (stdio)**
+```bash
+phil-cli mcp config add gdrive --type stdio --cmd "npx -y @modelcontextprotocol/server-gdrive"
 
 ```bash
 "gdrive": {
@@ -230,6 +306,30 @@ Dự án Phil AI Agent là mã nguồn mở. Chúng tôi chào đón mọi đón
 - [ ] **Giai đoạn 3:** Hệ thống Dashboard quản trị tập trung cho doanh nghiệp.
 
 - [ ] **Giai đoạn 4:** Hỗ trợ Fine-tuning tự động dựa trên dữ liệu riêng của khách hàng.
+
+---
+
+## 📚 Tài liệu tham khảo nhanh (Quick Reference)
+
+### Lệnh MCP thường dùng
+
+| Lệnh | Mô tả | Ví dụ |
+|------|--------|--------|
+| `phil-cli mcp list` | Liệt kê tất cả servers | `phil-cli mcp list` |
+| `phil-cli mcp call` | Gọi tool | `phil-cli mcp call git.list_repos limit=5` |
+| `phil-cli mcp auth` | Xác thực server | `phil-cli mcp auth slack` |
+| `phil-cli mcp config add` | Thêm server mới | `phil-cli mcp config add db --type http --url localhost:3002` |
+| `phil-cli mcp daemon status` | Kiểm tra daemon | `phil-cli mcp daemon status` |
+
+### Các MCP servers được hỗ trợ
+- **Git**: Quản lý repository, commits, branches
+- **Slack**: Gửi tin nhắn, quản lý channels
+- **Database**: Thực thi queries SQL
+- **File System**: Đọc/ghi files
+- **Google Drive**: Quản lý files và folders
+- **Telegram**: Gửi tin nhắn qua bot
+- **Discord**: Quản lý servers và channels
+- **Zalo**: Tích hợp OA Zalo
 
 ---
 

@@ -39,14 +39,16 @@ graph TD
 
     subgraph "Brain Cluster (GPU)"
         vLLM[vLLM Inference Engine]
-        Llama[Llama-3 Logic]
-        PhoGPT[PhoGPT Vietnamese]
-        Qwen[Qwen-VL Vision]
+        DeepSeek[DeepSeek Logic]
+        Qwen[Qwen2.5 Vietnamese]
+        OpenGVLab[OpenGVLab Vision]
+        OpenAI[Whisper Ears]
+        F5-TTS[E2-TTS Mouth]
     end
 
     subgraph "Execution Layer"
         Sandbox[Docker Sandbox]
-        MCP[MCP Servers - Git/DB/Slack]
+        MCP[MCP Servers - Git/DB/Slack/Telegram/Discord/Zalo]
     end
 
     CLI & Web & API --> Nginx

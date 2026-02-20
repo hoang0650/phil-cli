@@ -15,63 +15,50 @@ services:
     networks:
       - phil_network
 
-  llm-coder: # Llama-3-70B
+  vllm-brain: # Phil-70B-Coder-N1 (DeepSeek-R1-Distill-Llama-70B trained)
     image: vllm/vllm-openai:latest
-    container_name: ai_brain_coder
+    container_name: vllm_brain
     runtime: nvidia
     restart: always
     environment: [ "CUDA_VISIBLE_DEVICES=0" ]
     command: >
-      --model casperhansen/llama-3-70b-instruct-awq --quantization awq
+      --model phil-ai/Phil-70B-Coder-N1 --quantization awq
       --dtype half --max-model-len 8192 --gpu-memory-utilization 0.50
       --port 8000 --host 0.0.0.0
     volumes: [ "./models:/root/.cache/huggingface" ]
     networks: [ "phil_network" ]
 
-  llm-vietnamese: # PhoGPT
+  vllm-vision: # Phil-InternVL2-76B-N1 (InternVL2-76B trained)
     image: vllm/vllm-openai:latest
-    container_name: ai_brain_vietnamese
+    container_name: vllm_vision
     runtime: nvidia
     restart: always
     environment: [ "CUDA_VISIBLE_DEVICES=0" ]
     command: >
-      --model vinai/PhoGPT-4B-Chat --trust-remote-code
-      --dtype half --gpu-memory-utilization 0.10
-      --port 8001 --host 0.0.0.0
-    volumes: [ "./models:/root/.cache/huggingface" ]
-    networks: [ "phil_network" ]
-
-  llm-vision: # Qwen2-VL
-    image: vllm/vllm-openai:latest
-    container_name: ai_brain_eyes
-    runtime: nvidia
-    restart: always
-    environment: [ "CUDA_VISIBLE_DEVICES=0" ]
-    command: >
-      --model Qwen/Qwen2-VL-7B-Instruct-AWQ --quantization awq
+      --model phil-ai/Phil-InternVL2-76B-N1 --quantization awq
       --dtype half --gpu-memory-utilization 0.10 --max-model-len 4096
-      --limit-mm-per-prompt image=1 --port 8002 --host 0.0.0.0
+      --limit-mm-per-prompt image=1 --port 8001 --host 0.0.0.0
     volumes: [ "./models:/root/.cache/huggingface" ]
     networks: [ "phil_network" ]
 
-  stt-engine: # Whisper
+  whisper-service: # Phil-Ear-N1 (Whisper-large-v3 trained)
     image: fedirz/faster-whisper-server:latest-cuda
-    container_name: ai_brain_ears
+    container_name: whisper_service
     runtime: nvidia
     restart: always
     environment:
       - CUDA_VISIBLE_DEVICES=0
-      - WHISPER_MODEL=large-v3
+      - WHISPER_MODEL=phil-ai/Phil-Ear-N1
     volumes: [ "./models:/root/.cache/huggingface" ]
     networks: [ "phil_network" ]
 
-  tts-engine: # XTTS
+  tts-service: # Phil-F5-TTS (F5-TTS trained)
     image: ghcr.io/coqui-ai/tts:latest
-    container_name: ai_brain_mouth
+    container_name: tts_service
     runtime: nvidia
     restart: always
     environment: [ "CUDA_VISIBLE_DEVICES=0" ]
-    command: "python3 -m TTS.server.server --model_name tts_models/multilingual/multi-dataset/xtts_v2 --port 8004 --use_cuda true"
+    command: "python3 -m TTS.server.server --model_name phil-ai/Phil-F5-TTS --port 8003 --use_cuda true"
     volumes: [ "./models:/root/.local/share/tts" ]
     networks: [ "phil_network" ]
 
@@ -113,7 +100,7 @@ services:
       - ./skills:/app/skills
       - /var/run/docker.sock:/var/run/docker.sock # Cho phép điều khiển Sandbox
     env_file: [ ".env" ]
-    depends_on: [ "llm-coder", "code-sandbox" ]
+    depends_on: [ "vllm-brain", "vllm-vision", "whisper-service", "tts-service", "code-sandbox" ]
     networks: [ "phil_network" ]
 
 networks:
