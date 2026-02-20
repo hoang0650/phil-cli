@@ -66,7 +66,6 @@ graph TD
     subgraph "Brain Cluster (GPU)"
         vLLM[vLLM Inference Engine]
         DeepSeek[Phil-70B-Coder-N1 Logic]
-        Qwen[Phil-70B-Coder-N1 Vietnamese]
         OpenGVLab[Phil-InternVL2-76B-N1 Vision]
         OpenAI[Phil-Ear-N1]
         F5-TTS[Phil-F5-TTS Mouth]
@@ -80,9 +79,11 @@ graph TD
     CLI & Web & API --> Nginx
     Nginx --> Auth
     Auth --> vLLM
-    vLLM --> DeepSeek & Qwen
-    DeepSeek --> Sandbox
-    Qwen --> Sandbox    
+    vLLM --> DeepSeek & OpenGVLab & OpenAI & F5-TTS
+    DeepSeek --> Sandbox 
+    OpenGVLab --> Sandbox
+    OpenAI --> Sandbox
+    F5-TTS --> Sandbox
     Sandbox --> MCP
 ```
 
