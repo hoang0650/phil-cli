@@ -8,7 +8,7 @@ from src.tools.tools_project import list_files_recursive, read_file_content
 from src.tools.tools_code import write_to_project, execute_in_sandbox
 from src.tools.tools_vision import analyze_image
 from src.mpc_planner import mpc_optimize_plan
-from src.skills_manager import SkillManager
+from src.skills.manager import SkillManager
 
 # --- MODEL SETUP ---
 llm_vn = ChatOpenAI(model="vinai/PhoGPT-4B-Chat", openai_api_base=VN_API_BASE, openai_api_key=API_KEY, temperature=0.6)

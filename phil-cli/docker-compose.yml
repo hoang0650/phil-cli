@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: phil_cli_postgres
+    environment:
+      POSTGRES_DB: phil_cli_db
+      POSTGRES_USER: phil_user
+      POSTGRES_PASSWORD: phil_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - phil_cli_network
+
+  # Redis for Memory & Session
+  redis:
+    image: redis:7-alpine
+    container_name: phil_cli_redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - phil_cli_network
+
+  # Main Application
+  phil_cli_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phil_cli_app
+    environment:
+      - DATABASE_URL=postgresql://phil_user:phil_password@postgres:5432/phil_cli_db
+      - REDIS_URL=redis://redis:6379/0
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here-minimum-32-characters}
+      - DEBUG=false
+    volumes:
+      - ./workspace:/app/workspace
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - phil_cli_network
+    restart: unless-stopped
+
+  # Nginx Gateway
+  nginx:
+    image: nginx:alpine
+    container_name: phil_cli_nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - phil_cli_app
+    networks:
+      - phil_cli_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  phil_cli_network:
+    driver: bridge

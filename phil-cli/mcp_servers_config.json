@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"]
+    },
+    "gdrive": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gdrive"]
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"]
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "--file", "/workspace/data.db"]
+    },
+    "discord": {
+      "command": "python3",
+      "args": ["/workspace/servers/discord_server.py"],
+      "env": {
+        "DISCORD_BOT_TOKEN": "ENV_DISCORD_TOKEN" 
+      }
+    },
+    "telegram": {
+      "command": "python3",
+      "args": ["/workspace/servers/telegram_server.py"],
+      "env": {
+        "TELEGRAM_BOT_TOKEN": "ENV_TELEGRAM_TOKEN"
+      }
+    },
+    "web-browser": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    }
+  }
+}

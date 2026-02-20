@@ -47,9 +47,9 @@ class MCPManager:
                     tool_name = f"{name}_{tool.name}" # Prefix tên để tránh trùng
                     
                     # 2. Tạo hàm wrapper để Llama-3 gọi
-                    async def _run_tool_wrapper(*args, **kwargs):
+                    async def _run_tool_wrapper(tool_name_inner=tool.name, *args, **kwargs):
                         # Hàm này sẽ được gọi khi Agent quyết định dùng tool
-                        return await session.call_tool(tool.name, arguments=kwargs)
+                        return await session.call_tool(tool_name_inner, arguments=kwargs)
 
                     # 3. Đóng gói thành LangChain Tool
                     lc_tool = Tool(

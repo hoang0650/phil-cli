@@ -1,7 +1,9 @@
 import sys
 import os
 import secrets
-import uvicorn
+import httpx
+import json
+import logging
 from contextlib import asynccontextmanager
 from typing import Optional, List, Dict, Any
 
@@ -19,13 +21,20 @@ from src.database.models import User, AuditLog, ApiKey
 from src.services.bootstrap import create_initial_superuser
 from src.services.audit import record_audit_log
 
-# 2. Agent Logic
+# 2. Agent Logic & Model Integration
 from src.agent_graph import app_graph
+from src.config import Config
+from src.security.policy import get_security_policy, validate_tool_access, filter_content_security
+from src.sandbox.manager import initialize_sandboxing, cleanup_sandboxes
 
 # --- CONFIG & LIFESPAN ---
 
 # Tạo bảng tự động (Trong môi trường Prod nên dùng Alembic Migration)
 Base.metadata.create_all(bind=engine)
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,6 +44,14 @@ async def lifespan(app: FastAPI):
     try:
         # Tự động tạo Admin nếu chưa có
         create_initial_superuser(db)
+        
+        # Initialize sandboxing
+        sandbox_manager = initialize_sandboxing()
+        logger.info(f"Sandboxing initialized: {'enabled' if sandbox_manager.enabled else 'disabled'}")
+        
+        # Test phil-ai model connectivity
+        await test_phil_ai_connection()
+        
     except Exception as e:
         print(f">>> STARTUP ERROR: {e}")
     finally:
@@ -44,6 +61,7 @@ async def lifespan(app: FastAPI):
     
     # --- SHUTDOWN ---
     print(">>> SYSTEM SHUTDOWN")
+    cleanup_sandboxes()
 
 app = FastAPI(title="Phil AI Global Gateway", lifespan=lifespan)
 
@@ -57,6 +75,8 @@ WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "phil_default_secret") # Nên có d
 class ChatRequest(BaseModel):
     user_input: str
     image_url: Optional[str] = None
+    use_sandbox: bool = True  # Enable sandboxing by default
+    security_level: Optional[str] = "high"  # Security level for MCP tools
 
 class UserSyncPayload(BaseModel):
     username: str
@@ -75,6 +95,66 @@ class KeyResponse(BaseModel):
 class CreateKeyRequest(BaseModel):
     owner: str
     role: str = "user"
+
+class ModelResponse(BaseModel):
+    response: str
+    model_used: str
+    tokens_used: int
+    security_check: Dict[str, Any]
+
+# --- PHIL-AI MODEL INTEGRATION ---
+
+async def test_phil_ai_connection():
+    """Test connection to phil-ai models"""
+    try:
+        model_config = Config.get_model_config()
+        brain_endpoint = model_config["brain"]["endpoint"]
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{brain_endpoint}/health")
+            if response.status_code == 200:
+                logger.info(f"✅ Phil-AI Brain model connected: {brain_endpoint}")
+            else:
+                logger.warning(f"⚠️  Phil-AI Brain model health check failed: {response.status_code}")
+                
+    except Exception as e:
+        logger.error(f"❌ Failed to connect to Phil-AI models: {str(e)}")
+
+async def call_phil_ai_model(endpoint: str, prompt: str, model_name: str, max_tokens: int = 4096) -> Dict[str, Any]:
+    """Call phil-ai model endpoint"""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": "You are a helpful AI assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": max_tokens,
+                "temperature": 0.7
+            }
+            
+            response = await client.post(f"{endpoint}/chat/completions", json=payload)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return {
+                    "success": True,
+                    "response": result["choices"][0]["message"]["content"],
+                    "tokens_used": result["usage"]["total_tokens"],
+                    "model": result["model"]
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"Model returned status {response.status_code}: {response.text}"
+                }
+                
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to call model: {str(e)}"
+        }
 
 # --- SECURITY DEPENDENCIES (QUAN TRỌNG) ---
 
@@ -208,40 +288,150 @@ async def generate_api_key(
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- 3. CHAT ENDPOINT (Main Service) ---
+# --- 3. CHAT ENDPOINT (Main Service with Phil-AI Integration) ---
 
-@app.post("/v1/chat")
+@app.post("/v1/chat", response_model=ModelResponse)
 async def chat_endpoint(
     req: ChatRequest, 
     user: User = Depends(get_current_user), # Đã xác thực qua DB
     db: Session = Depends(get_db)
 ):
-    # Logic Agent
-    inputs = {
-        "user_id": user.username,
-        "user_input_vn": req.user_input,
-        "image_url": req.image_url,
-        "iterations": 0,
-        "project_structure": "",
-        "goal_english": "",
-        "current_state": "",
-        "mpc_plan": "",
-        "code": "",
-        "exec_result": "",
-        "final_response_vn": ""
-    }
+    """
+    Chat endpoint với Phil-AI model integration và security features
+    """
+    
+    # Security content filtering
+    content_filter = filter_content_security(req.user_input, "prompt", user.username)
+    if not content_filter["allowed"]:
+        logger.warning(f"Content blocked for user {user.username}: {content_filter['reason']}")
+        return ModelResponse(
+            response=f"Content blocked by security policy: {content_filter['reason']}",
+            model_used="security_filter",
+            tokens_used=0,
+            security_check={"blocked": True, "reason": content_filter["reason"]}
+        )
+    
+    # Get model configuration
+    model_config = Config.get_model_config()
     
     try:
-        final_state = app_graph.invoke(inputs)     
-        return {
-            "response": final_state.get('final_response_vn', "No response"),
-            "status": "success",
-            "user": user.username
-        }
+        # Call Phil-AI Brain model
+        brain_endpoint = model_config["brain"]["endpoint"]
+        brain_model = model_config["brain"]["model_name"]
+        
+        logger.info(f"Calling Phil-AI Brain model: {brain_model} at {brain_endpoint}")
+        
+        result = await call_phil_ai_model(
+            endpoint=brain_endpoint,
+            prompt=req.user_input,
+            model_name=brain_model
+        )
+        
+        if not result["success"]:
+            logger.error(f"Model call failed: {result['error']}")
+            return ModelResponse(
+                response=f"Model error: {result['error']}",
+                model_used=brain_model,
+                tokens_used=0,
+                security_check={"error": True, "details": result["error"]}
+            )
+        
+        # Filter model response
+        response_filter = filter_content_security(result["response"], "response", user.username)
+        if not response_filter["allowed"]:
+            logger.warning(f"Model response blocked: {response_filter['reason']}")
+            return ModelResponse(
+                response=f"Model response blocked by security policy: {response_filter['reason']}",
+                model_used=brain_model,
+                tokens_used=result["tokens_used"],
+                security_check={"blocked": True, "reason": response_filter["reason"]}
+            )
+        
+        # Record audit log
+        record_audit_log(
+            db=db,
+            actor=user.username,
+            role=user.role,
+            action="CHAT_REQUEST",
+            target=brain_model,
+            details={
+                "prompt_length": len(req.user_input),
+                "response_length": len(result["response"]),
+                "tokens_used": result["tokens_used"],
+                "security_level": req.security_level,
+                "sandbox_enabled": req.use_sandbox
+            }
+        )
+        
+        return ModelResponse(
+            response=result["response"],
+            model_used=result["model"],
+            tokens_used=result["tokens_used"],
+            security_check={"passed": True, "level": req.security_level}
+        )
+        
     except Exception as e:
-        return {"response": f"System Error: {str(e)}", "status": "error"}
+        logger.error(f"Chat endpoint error: {str(e)}")
+        return ModelResponse(
+            response=f"System error: {str(e)}",
+            model_used="error",
+            tokens_used=0,
+            security_check={"error": True, "details": str(e)}
+        )
 
-# --- 4. PROJECT MANAGEMENT (Audit Log Demo) ---
+# --- 4. SANDBOX EXECUTION ENDPOINT ---
+
+@app.post("/v1/sandbox/execute")
+async def sandbox_execute(
+    command: str,
+    session_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Execute commands in sandboxed environment
+    """
+    from src.sandbox.manager import get_sandbox_manager
+    
+    sandbox_manager = get_sandbox_manager()
+    
+    if not sandbox_manager.enabled:
+        return {"status": "error", "message": "Sandboxing is disabled"}
+    
+    try:
+        # Create sandbox for user session
+        sandbox_info = sandbox_manager.create_sandbox(session_id, task_type="user_command")
+        
+        if sandbox_info.get("status") == "error":
+            return sandbox_info
+        
+        container_id = sandbox_info["container_id"]
+        
+        # Execute command in sandbox
+        result = sandbox_manager.execute_command(container_id, command)
+        
+        # Record audit log
+        record_audit_log(
+            db=db,
+            actor=user.username,
+            role=user.role,
+            action="SANDBOX_EXECUTE",
+            target=container_id,
+            details={
+                "command": command,
+                "exit_code": result.get("exit_code"),
+                "status": result.get("status"),
+                "session_id": session_id
+            }
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Sandbox execution error: {str(e)}")
+        return {"status": "error", "message": f"Sandbox execution failed: {str(e)}"}
+
+# --- 5. PROJECT MANAGEMENT (Audit Log Demo) ---
 
 @app.delete("/v1/projects/{project_id}")
 async def delete_project(
@@ -267,7 +457,7 @@ async def delete_project(
     
     return {"status": "deleted", "project_id": project_id}
 
-# --- 5. ADMIN ENDPOINTS ---
+# --- 6. ADMIN ENDPOINTS ---
 
 @app.post("/v1/admin/keys")
 async def admin_create_key(
@@ -309,5 +499,26 @@ async def admin_revoke_key(
     
     raise HTTPException(status_code=404, detail="Key not found")
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+# --- 7. SECURITY STATUS ENDPOINT ---
+
+@app.get("/v1/security/status")
+async def security_status(
+    user: User = Depends(get_current_user)
+):
+    """Get current security configuration status"""
+    policy = get_security_policy()
+    config = Config.get_model_config()
+    
+    return {
+        "security_level": policy.security_level.value,
+        "sandbox_enabled": Config.SANDBOX_ENABLED,
+        "phil_ai_models": {
+            "brain": config["brain"]["model_name"],
+            "vision": config["vision"]["model_name"],
+            "ears": config["ears"]["model_name"],
+            "mouth": config["mouth"]["model_name"]
+        },
+        "policy_summary": policy.get_policy_summary(),
+        "local_models": Config.USE_LOCAL_MODELS,
+        "anthropic_api_disabled": not Config.ANTHROPIC_API_KEY
+    }
