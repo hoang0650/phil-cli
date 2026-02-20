@@ -3,7 +3,7 @@ from src.config import CODER_API_BASE, API_KEY
 from langchain_openai import ChatOpenAI
 from src.skills_manager import SkillManager
 
-llm = ChatOpenAI(model="casperhansen/llama-3-70b-instruct-awq", openai_api_base=CODER_API_BASE, openai_api_key=API_KEY, temperature=0.1)
+llm = ChatOpenAI(model="Phil-70B-Coder-N1", openai_api_base=CODER_API_BASE, openai_api_key=API_KEY, temperature=0.1)
 
 def mpc_optimize_plan(goal, current_state_desc, available_tools_desc):
     """

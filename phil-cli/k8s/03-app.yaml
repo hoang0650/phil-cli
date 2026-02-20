@@ -50,7 +50,7 @@ spec:
         command: ["python3", "src/api_server.py"]
         env:
         - name: CODER_API_BASE
-          value: "http://llm-coder:8000/v1"
+          value: "http://vllm-brain:8000/v1"
         # ... Thêm các biến ENV khác (VN_API, WEBHOOK_SECRET...) ...
         volumeMounts:
         - mountPath: /workspace

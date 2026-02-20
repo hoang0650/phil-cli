@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'phil=phil_cli.main:main',
+            'phil-cli=phil_cli.main:main',
         ],
     },
     classifiers=[

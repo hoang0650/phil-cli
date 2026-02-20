@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-CONFIG_PATH = Path.home() / ".phil_config.json"
+CONFIG_PATH = Path.home() / ".phil_cli" / "config.json"
 
 # URL Server mặc định (Thay bằng IP/Domain Server của bạn)
 DEFAULT_SERVER_URL = "https://api.phil-ai.com" 
@@ -17,6 +17,9 @@ def save_config(api_key=None, server_url=None):
     config = load_config()
     if api_key: config["api_key"] = api_key
     if server_url: config["server_url"] = server_url
+    
+    # Tạo thư mục nếu chưa tồn tại
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     
     with open(CONFIG_PATH, "w") as f:
         json.dump(config, f)

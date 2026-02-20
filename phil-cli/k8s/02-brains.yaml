@@ -1,24 +1,24 @@
 # ==========================================
-# 1. LLAMA-3 (CODER) - Port 8000
+# 1. PHIL-70B-CODER-N1 (BRAIN) - Port 8000
 # ==========================================
 apiVersion: apps/v1  # <--- SỬA: apps/v1
 kind: Deployment
 metadata:
-  name: llm-coder
+  name: vllm-brain
   namespace: phil-ai
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: llm-coder
+      app: vllm-brain
   template:
     metadata:
       labels:
-        app: llm-coder
+        app: vllm-brain
     spec:
       runtimeClassName: nvidia
       containers:
-      - name: llm-coder
+      - name: vllm-brain
         image: vllm/vllm-openai:latest
         env:
         - name: CUDA_VISIBLE_DEVICES
@@ -26,7 +26,7 @@ spec:
         command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
         args: 
         - "--model" 
-        - "casperhansen/llama-3-70b-instruct-awq" 
+        - "phil-ai/Phil-70B-Coder-N1" 
         - "--quantization" 
         - "awq" 
         - "--dtype" 
@@ -48,37 +48,37 @@ spec:
 apiVersion: v1
 kind: Service  # <--- THÊM SERVICE ĐỂ API SERVER GỌI ĐƯỢC
 metadata:
-  name: llm-coder
+  name: vllm-brain
   namespace: phil-ai
 spec:
   ports:
   - port: 8000
     targetPort: 8000
   selector:
-    app: llm-coder
+    app: vllm-brain
 
 ---
 # ==========================================
-# 2. PHOGPT (VIETNAMESE) - Port 8001
+# 2. PHIL-70B-CODER-N1 (VIETNAMESE) - Port 8001
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm-vietnamese
+  name: vllm-brain
   namespace: phil-ai
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: llm-vietnamese
+      app: vllm-brain
   template:
     metadata:
       labels:
-        app: llm-vietnamese
+        app: vllm-brain
     spec:
       runtimeClassName: nvidia
       containers:
-      - name: llm-vietnamese
+      - name: vllm-brain
         image: vllm/vllm-openai:latest
         env:
         - name: CUDA_VISIBLE_DEVICES
@@ -86,8 +86,9 @@ spec:
         command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
         args: 
         - "--model" 
-        - "vinai/PhoGPT-4B-Chat" 
-        - "--trust-remote-code" 
+        - "phil-ai/Phil-70B-Coder-N1" 
+        - "--quantization" 
+        - "awq" 
         - "--dtype" 
         - "half" 
         - "--gpu-memory-utilization" 
@@ -107,37 +108,37 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: llm-vietnamese
+  name: vllm-brain
   namespace: phil-ai
 spec:
   ports:
   - port: 8001
     targetPort: 8001
   selector:
-    app: llm-vietnamese
+    app: vllm-brain
 
 ---
 # ==========================================
-# 3. QWEN2-VL (VISION) - Port 8002
+# 3. PHIL-INTERNVL2-76B-N1 (VISION) - Port 8002
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: llm-vision
+  name: vllm-vision
   namespace: phil-ai
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: llm-vision
+      app: vllm-vision
   template:
     metadata:
       labels:
-        app: llm-vision
+        app: vllm-vision
     spec:
       runtimeClassName: nvidia
       containers:
-      - name: llm-vision
+      - name: vllm-vision
         image: vllm/vllm-openai:latest
         env:
         - name: CUDA_VISIBLE_DEVICES
@@ -146,7 +147,7 @@ spec:
         # SỬA LỖI CÚ PHÁP ARGS NGHIÊM TRỌNG Ở ĐÂY
         args: 
         - "--model" 
-        - "Qwen/Qwen2-VL-7B-Instruct-AWQ" 
+        - "phil-ai/Phil-InternVL2-76B-N1" 
         - "--quantization" 
         - "awq" 
         - "--dtype" 
@@ -172,43 +173,43 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: llm-vision
+  name: vllm-vision
   namespace: phil-ai
 spec:
   ports:
   - port: 8002
     targetPort: 8002
   selector:
-    app: llm-vision
+    app: vllm-vision
 
 ---
 # ==========================================
-# 4. WHISPER (STT) - Port 8003
+# 4. PHIL-EAR-N1 (STT) - Port 8003
 # ==========================================
 apiVersion: apps/v1 # <--- SỬA TỪ 'kind: Service' THÀNH apps/v1 Deployment
 kind: Deployment
 metadata:
-  name: stt-engine
+  name: whisper-service
   namespace: phil-ai
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: stt-engine
+      app: whisper-service
   template:
     metadata:
       labels:
-        app: stt-engine
+        app: whisper-service
     spec:
       runtimeClassName: nvidia
       containers:
-      - name: stt-engine
+      - name: whisper-service
         image: fedirz/faster-whisper-server:latest-cuda
         env:
         - name: CUDA_VISIBLE_DEVICES
           value: "0"
         - name: WHISPER_MODEL
-          value: "large-v3"
+          value: "phil-ai/Phil-Ear-N1"
         ports:
         - containerPort: 8003
         volumeMounts:
@@ -222,38 +223,38 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: stt-engine
+  name: whisper-service
   namespace: phil-ai
 spec:
   ports:
-  - port: 8000 # Whisper server mặc định chạy port 8000 bên trong container
+  - port: 8002 # Whisper service port
     targetPort: 8000
     name: http
   selector:
-    app: stt-engine
+    app: whisper-service
 
 ---
 # ==========================================
-# 5. XTTS (TTS) - Port 8004
+# 5. PHIL-F5-TTS (TTS) - Port 8004
 # ==========================================
 apiVersion: apps/v1 # <--- SỬA LẠI TỪ 'kind: Service'
 kind: Deployment
 metadata:
-  name: tts-engine
+  name: tts-service
   namespace: phil-ai
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tts-engine
+      app: tts-service
   template:
     metadata:
       labels:
-        app: tts-engine
+        app: tts-service
     spec:
       runtimeClassName: nvidia
       containers:
-      - name: tts-engine
+      - name: tts-service
         image: ghcr.io/coqui-ai/tts:latest
         env:
         - name: CUDA_VISIBLE_DEVICES
@@ -261,7 +262,7 @@ spec:
         command: ["python3", "-m", "TTS.server.server"]
         args: 
         - "--model_name" 
-        - "tts_models/multilingual/multi-dataset/xtts_v2" 
+        - "phil-ai/Phil-F5-TTS" 
         - "--port" 
         - "8004" 
         - "--use_cuda" 
@@ -279,11 +280,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: tts-engine
+  name: tts-service
   namespace: phil-ai
 spec:
   ports:
   - port: 8004
     targetPort: 8004
   selector:
-    app: tts-engine
+    app: tts-service

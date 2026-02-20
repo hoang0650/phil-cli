@@ -16,16 +16,21 @@ class Config:
     PHIL_AI_GATEWAY_URL = os.getenv("PHIL_AI_GATEWAY_URL", "http://phil-ai-gateway:8000")
     
     # Brain Model (Logic Engine) - Thay thế Llama-3-70B-Instruct
-    BRAIN_MODEL_ENDPOINT = os.getenv("BRAIN_MODEL_ENDPOINT", "http://phil-ai-gateway:8000/v1")
+    BRAIN_MODEL_ENDPOINT = os.getenv("BRAIN_MODEL_ENDPOINT", "http://vllm-brain:8000/v1")
     BRAIN_MODEL_NAME = os.getenv("BRAIN_MODEL_NAME", "Phil-70B-Coder-N1")
     
     # Vision Model (Eyes) - Thay thế các vision APIs
-    VISION_MODEL_ENDPOINT = os.getenv("VISION_MODEL_ENDPOINT", "http://phil-ai-gateway:8000/v1")
+    VISION_MODEL_ENDPOINT = os.getenv("VISION_MODEL_ENDPOINT", "http://vllm-vision:8001/v1")
     VISION_MODEL_NAME = os.getenv("VISION_MODEL_NAME", "Phil-InternVL2-76B-N1")
     
+    # Legacy API endpoints cho backward compatibility
+    VN_API_BASE = os.getenv("VN_API_BASE", "http://vllm-brain:8000/v1")
+    CODER_API_BASE = os.getenv("CODER_API_BASE", "http://vllm-brain:8000/v1")
+    VISION_API_BASE = os.getenv("VISION_API_BASE", "http://vllm-vision:8001/v1")
+    
     # Audio Models (Ears & Mouth) - Tích hợp voice capabilities
-    WHISPER_ENDPOINT = os.getenv("WHISPER_ENDPOINT", "http://phil-ai-gateway:8000/v1")
-    TTS_ENDPOINT = os.getenv("TTS_ENDPOINT", "http://phil-ai-gateway:8000/v1")
+    WHISPER_ENDPOINT = os.getenv("WHISPER_ENDPOINT", "http://whisper-service:8000/v1")
+    TTS_ENDPOINT = os.getenv("TTS_ENDPOINT", "http://tts-service:8003/v1")
     
     # Local Model Configuration - Tự chủ hoàn toàn
     USE_LOCAL_MODELS = os.getenv("USE_LOCAL_MODELS", "true").lower() == "true"

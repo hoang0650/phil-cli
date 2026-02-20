@@ -1,0 +1,13 @@
+README.md
+setup.py
+phil_cli/__init__.py
+phil_cli/api.py
+phil_cli/config.py
+phil_cli/main.py
+phil_cli/mcp_commands.py
+phil_cli.egg-info/PKG-INFO
+phil_cli.egg-info/SOURCES.txt
+phil_cli.egg-info/dependency_links.txt
+phil_cli.egg-info/entry_points.txt
+phil_cli.egg-info/requires.txt
+phil_cli.egg-info/top_level.txt

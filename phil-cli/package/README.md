@@ -13,7 +13,7 @@ Phil AI không chỉ là một chatbot; đó là một **Nhân viên AI (AI Work
 | Tính năng | Lợi ích cho Doanh nghiệp |
 | --- | --- |
 | **Self-hosted (On-premise)** | Dữ liệu và mã nguồn không bao giờ rời khỏi hạ tầng của công ty. Đảm bảo tuân thủ các tiêu chuẩn bảo mật khắt khe nhất. |
-| **Dual-Brain Architecture** | Kết hợp sức mạnh logic của `Llama-3-70B` và sự am hiểu văn hóa Việt của `PhoGPT`. |
+| **Dual-Brain Architecture** | Kết hợp sức mạnh logic của `Phil-70B-Coder-N1` và sự am hiểu văn hóa Việt của `Phil-70B-Coder-N1`. |
 | **Autonomous Coding** | Tự động viết, kiểm thử và sửa lỗi mã nguồn trong môi trường Sandbox an toàn. |
 | **Enterprise Security** | Tích hợp sẵn hệ thống Audit Logs, RBAC (Phân quyền dựa trên vai trò) và API Gateway. |
 | **Scalability** | Sẵn sàng triển khai trên Kubernetes, hỗ trợ hàng ngàn người dùng đồng thời. |
@@ -54,8 +54,9 @@ graph TD
     CLI & Web & API --> Nginx
     Nginx --> Auth
     Auth --> vLLM
-    vLLM --> Llama & PhoGPT & Qwen
-    Llama --> Sandbox
+    vLLM --> DeepSeek & Qwen
+    DeepSeek --> Sandbox
+    Qwen --> Sandbox    
     Sandbox --> MCP
 ```
 

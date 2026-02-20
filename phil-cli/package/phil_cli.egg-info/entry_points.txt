@@ -1,0 +1,2 @@
+[console_scripts]
+phil-cli = phil_cli.main:main

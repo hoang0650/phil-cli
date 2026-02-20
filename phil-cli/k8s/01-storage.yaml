@@ -60,15 +60,15 @@ spec:
         env:
         # CẤU HÌNH KẾT NỐI SANG CÁC POD AI KHÁC (Dùng tên Service K8s)
         - name: CODER_API_BASE
-          value: "http://llm-coder:8000/v1"
+          value: "http://vllm-brain:8000/v1"
         - name: VN_API_BASE
-          value: "http://llm-vietnamese:8001/v1"
+          value: "http://vllm-brain:8001/v1"
         - name: VISION_API_BASE
-          value: "http://llm-vision:8002/v1"
+          value: "http://vllm-vision:8002/v1"
         - name: STT_API_URL
-          value: "http://stt-engine:8000/v1/audio/transcriptions"
+          value: "http://whisper-service:8002/v1/audio/transcriptions"
         - name: TTS_API_URL
-          value: "http://tts-engine:8004/tts/to_audio"
+          value: "http://tts-service:8004/tts/to_audio"
         # CẤU HÌNH WEBHOOK & NODE BACKEND (Lấy từ Secret hoặc gán cứng test)
         - name: WEBHOOK_SECRET
           value: "phil_communication_secret_key_2024"

@@ -18,13 +18,13 @@ Hệ thống hoạt động dựa trên kiến trúc **Dual-Brain**:
     * **Isolation:** Mỗi người dùng có không gian Workspace riêng biệt, đảm bảo dữ liệu không bị lộ.
 
 2.  **🧠 The Dual-Brain Core:**
-    * **Logic Engine:** `Llama-3-70B-Instruct` (AWQ) - Xử lý tư duy phức tạp, MPC Planning.
-    * **Language Soul:** `PhoGPT-4B` - Chuyên trách văn hóa và ngôn ngữ Tiếng Việt.
+    * **Logic Engine:** `Phil-70B-Coder-N1` - Xử lý tư duy phức tạp, MPC Planning.
+    * **Language Soul:** `Phil-70B-Coder-N1` - Chuyên trách văn hóa và ngôn ngữ Tiếng Việt.
 
 3.  **👁️👂🗣️ Sensory Modules:**
-    * **Vision:** `Qwen2-VL` (OCR & Image Understanding).
-    * **Hearing:** `Faster-Whisper Large-v3` (High-fidelity STT).
-    * **Speech:** `XTTS-v2` (Multilingual TTS with Voice Cloning).
+    * **Vision:** `Phil-InternVL2-76B-N1` (OCR & Image Understanding).
+    * **Hearing:** `Phil-Ear-N1` (High-fidelity STT).
+    * **Speech:** `Phil-F5-TTS` (Multilingual TTS with Voice Cloning).
 
 4.  **🔌 Expansion & Action:**
     * **MCP Protocol:** Kết nối Telegram, Discord, Zalo (Puppeteer), Git, Database.
@@ -39,7 +39,7 @@ Phil AI không chỉ là một chatbot; đó là một **Nhân viên AI (AI Work
 | Tính năng | Lợi ích cho Doanh nghiệp |
 | --- | --- |
 | **Self-hosted (On-premise)** | Dữ liệu và mã nguồn không bao giờ rời khỏi hạ tầng của công ty. Đảm bảo tuân thủ các tiêu chuẩn bảo mật khắt khe nhất. |
-| **Dual-Brain Architecture** | Kết hợp sức mạnh logic của `Llama-3-70B` và sự am hiểu văn hóa Việt của `PhoGPT`. |
+| **Dual-Brain Architecture** | Kết hợp sức mạnh logic của `Phil-70B-Coder-N1` và sự am hiểu văn hóa Việt của `Phil-70B-Coder-N1`. |
 | **Autonomous Coding** | Tự động viết, kiểm thử và sửa lỗi mã nguồn trong môi trường Sandbox an toàn. |
 | **Enterprise Security** | Tích hợp sẵn hệ thống Audit Logs, RBAC (Phân quyền dựa trên vai trò) và API Gateway. |
 | **Scalability** | Sẵn sàng triển khai trên Kubernetes, hỗ trợ hàng ngàn người dùng đồng thời. |
@@ -65,11 +65,11 @@ graph TD
 
     subgraph "Brain Cluster (GPU)"
         vLLM[vLLM Inference Engine]
-        DeepSeek[DeepSeek Logic]
-        Qwen[Qwen2.5 Vietnamese]
-        OpenGVLab[OpenGVLab Vision]
-        OpenAI[Whisper Ears]
-        F5-TTS[E2-TTS Mouth]
+        DeepSeek[Phil-70B-Coder-N1 Logic]
+        Qwen[Phil-70B-Coder-N1 Vietnamese]
+        OpenGVLab[Phil-InternVL2-76B-N1 Vision]
+        OpenAI[Phil-Ear-N1]
+        F5-TTS[Phil-F5-TTS Mouth]
     end
 
     subgraph "Execution Layer"
@@ -80,8 +80,9 @@ graph TD
     CLI & Web & API --> Nginx
     Nginx --> Auth
     Auth --> vLLM
-    vLLM --> Llama & PhoGPT & Qwen
-    Llama --> Sandbox
+    vLLM --> DeepSeek & Qwen
+    DeepSeek --> Sandbox
+    Qwen --> Sandbox    
     Sandbox --> MCP
 ```
 
@@ -293,7 +294,7 @@ Dự án Phil AI Agent là mã nguồn mở. Chúng tôi chào đón mọi đón
 
 * Thêm MCP Server mới (Notion, Slack...).
 
-* Cải thiện bộ dataset Tiếng Việt cho PhoGPT.
+* Cải thiện bộ dataset Tiếng Việt cho Qwen2.5.
 
 ---
 

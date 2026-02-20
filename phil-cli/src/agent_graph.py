@@ -11,8 +11,9 @@ from src.mpc_planner import mpc_optimize_plan
 from src.skills.manager import SkillManager
 
 # --- MODEL SETUP ---
-llm_vn = ChatOpenAI(model="vinai/PhoGPT-4B-Chat", openai_api_base=VN_API_BASE, openai_api_key=API_KEY, temperature=0.6)
-llm_coder = ChatOpenAI(model="casperhansen/llama-3-70b-instruct-awq", openai_api_base=CODER_API_BASE, openai_api_key=API_KEY, temperature=0.1)
+# Sử dụng các model đã train từ phil-ai thay vì model gốc
+llm_vn = ChatOpenAI(model="Phil-70B-Coder-N1", openai_api_base=VN_API_BASE, openai_api_key=API_KEY, temperature=0.6)
+llm_coder = ChatOpenAI(model="Phil-70B-Coder-N1", openai_api_base=CODER_API_BASE, openai_api_key=API_KEY, temperature=0.1)
 
 # --- STATE ---
 class AgentState(TypedDict):

@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage
 from src.config import VISION_API_BASE, API_KEY
 
 llm_vision = ChatOpenAI(
-    model="Qwen/Qwen2-VL-7B-Instruct-AWQ",
+    model="Phil-InternVL2-76B-N1",
     openai_api_base=VISION_API_BASE,
     openai_api_key=API_KEY,
     max_tokens=1024
